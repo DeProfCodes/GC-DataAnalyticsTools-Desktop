@@ -1,0 +1,65 @@
+﻿<Window x:Class="Data_Analytics_Tools.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Data_Analytics_Tools"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <Button 
+            Grid.Row="1"
+            Grid.Column="2"
+            Content="Download From FTP " 
+            HorizontalAlignment="Left" 
+            VerticalAlignment="Center" 
+            Height="33"
+            Padding="5"
+            Width="Auto" 
+            Click="Button_Click"/>
+
+        <Button 
+            x:Name="RunScriptsToExcel"
+            Grid.Row="1"
+            Grid.Column="3"
+            Content="Run Script To Excel" 
+            HorizontalAlignment="Left" 
+            VerticalAlignment="Center" 
+            Height="33"
+            Padding="5"
+            Width="Auto" Click="RunScriptsToExcel_Click" />
+
+        <ProgressBar
+            Grid.Row="3"
+            Grid.Column="2"
+            Grid.ColumnSpan="2"
+            Name="progressBar" 
+            Minimum="0" 
+            Maximum="100" 
+            Height="20"
+            Width="250"
+            IsIndeterminate="True"
+            Visibility="Hidden"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Left"
+            />
+
+    </Grid>
+
+</Window>
