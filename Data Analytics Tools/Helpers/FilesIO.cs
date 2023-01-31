@@ -9,25 +9,66 @@ namespace Data_Analytics_Tools.Helpers
 {
     public class FilesIO
     {
-        public static Dictionary<string, string> ReadFileToCompletetion()
+        private static string GetMemoryFile()
+        {
+            var projectDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName;
+            var path = $"{projectDirectory}\\Folders\\memory\\LastKnownDirectories.txt";
+
+            return path;
+        }
+
+        public static void SaveDirectories(string source, string destination)
+        {
+            var path = GetMemoryFile();
+            File.WriteAllText(path, $"{source},{destination}"); 
+        }
+
+        public static string GetSavedSourceFolder()
+        {
+            var path = GetMemoryFile();
+            var directories = File.ReadAllText(path);
+
+            var data = directories.Split(",");
+            
+            if(data.Length > 1)
+                return data[0];
+
+            return "C:\\";
+        }
+
+        public static string GetSavedDestinationFolder()
+        {
+            var path = GetMemoryFile();
+            var directories = File.ReadAllText(path);
+
+            var data = directories.Split(",");
+
+            if (data.Length > 1)
+                return data[1];
+
+            return "C:\\";
+        }
+
+        private static string GetFileName(string filepath)
+        {
+            var data = filepath.Split('\\');
+            var filename = data[data.Length - 1].Split(".")[0];
+
+            return filename;
+        }
+        public static Dictionary<string, string> ReadFileToCompletetion(string sourceFolder)
         {
             Dictionary<string, string> scripts = new Dictionary<string, string>();
 
-            var files = new List<string>()
-            {
-                "5G script", "Custom  Ping CDR", "Custom Data CDR",
-                "Custom Streaming CDR", "Customized Voice CDR", "MO MT Voice CDR",
-                "MOS samples perfected", "VDC Custom Data CDR", "VDC Custom Streaming CDR"
-            };
+            var scriptFiles = Directory.GetFiles(sourceFolder);
 
-            var projectDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName;
-
-            foreach (var file in files) 
+            foreach (var script in scriptFiles)
             {
-                var path = $"{projectDirectory}\\Folders\\SqlScripts\\{file}.sql";
-                var script = File.ReadAllText(path);
-                scripts.Add($"{file}.xlsx", script);
+                var filename = GetFileName(script);   
+                var sql = File.ReadAllText(script);
+                scripts.Add($"{filename}.xlsx", sql);
             }
+
             return scripts;
         }
     }

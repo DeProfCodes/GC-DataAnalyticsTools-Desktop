@@ -6,10 +6,15 @@
     <RootNamespace>Data_Analytics_Tools</RootNamespace>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>resources\img\logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="resources\img\logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="resources\img\logo.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,10 +23,6 @@
     <PackageReference Include="NPOI" Version="2.5.1" />
     <PackageReference Include="Paket.Core" Version="5.258.1" />
     <PackageReference Include="System.Data.SqlClient" Version="4.1.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Excel Files Output\" />
   </ItemGroup>
 
   <ItemGroup>

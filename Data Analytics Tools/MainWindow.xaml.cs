@@ -1,6 +1,10 @@
 ﻿using Data_Analytics_Tools.Helpers;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,10 +26,25 @@ namespace Data_Analytics_Tools
     public partial class MainWindow : Window
     {
         SQL sql;
+        BackgroundWorker worker;
+        private string sourceFolderTxt;
+        private string destinationFolderTxt;
+
         public MainWindow()
         {
             InitializeComponent();
             sql = new SQL();
+
+            worker = new BackgroundWorker();
+            worker.WorkerSupportsCancellation = true;
+
+            var savedSrcFolder = FilesIO.GetSavedSourceFolder();
+            var savedDstFolder = FilesIO.GetSavedDestinationFolder();
+
+            sourceFolder.Text = savedSrcFolder;
+            sourceFolderFull.Text = savedSrcFolder; 
+            destinationFolder.Text = savedDstFolder;
+            destinationFolderFull.Text = savedDstFolder;    
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -33,28 +52,113 @@ namespace Data_Analytics_Tools
             progressBar.Visibility = Visibility.Visible;
         }
 
+        private void OpenDialog(TextBox textBox, TextBlock textBlock)
+        {
+            var dialog = new SaveFileDialog();
+            var initDirec = Directory.Exists(textBox.Text) ? textBox.Text : "C:\\";
+            dialog.InitialDirectory = initDirec; // Use current value for initial dir
+            dialog.Title = "Select a Directory"; // instead of default "Save As"
+            dialog.Filter = "Directory|*.this.directory"; // Prevents displaying files
+            dialog.FileName = "select"; // Filename will then be "select.this.directory"
+            
+            if (dialog.ShowDialog() == true)
+            {
+                string path = dialog.FileName;
+                // Remove fake filename from resulting path
+                path = path.Replace("\\select.this.directory", "");
+                path = path.Replace(".this.directory", "");
+                // If user has changed the filename, create the new directory
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+                // Our final value is in path
+                textBox.Text = path;
+                textBlock.Text = path;
+            }
+        }
+
+        private void SelectSource_Click(object sender, RoutedEventArgs e)
+        {
+            OpenDialog(sourceFolder, sourceFolderFull);
+        }
+
+        private void SelectDestination_Click(object sender, RoutedEventArgs e)
+        {
+            OpenDialog(destinationFolder, destinationFolderFull);
+        }
+
         private void RunScriptsToExcel_Click(object sender, RoutedEventArgs e)
         {
-            progressSp.Visibility = Visibility.Visible;
+            sourceFolderTxt = sourceFolderFull.Text;
+            destinationFolderTxt = destinationFolderFull.Text;
 
-            var scripts = FilesIO.ReadFileToCompletetion();
+            progressBd.Visibility = Visibility.Visible;
+            RunScriptsToExcel.IsEnabled = false;
+            
+            FilesIO.SaveDirectories(sourceFolderTxt, destinationFolderTxt);
 
-            int x = 0;
+            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += worker_DoWork;
+            worker.ProgressChanged += worker_ProgressChanged;
+            worker.RunWorkerAsync();
+        }
+
+        private void worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
+        {
+            progressBar.Value = e.ProgressPercentage;
+            progressBarTxt.Text = e.ProgressPercentage + "%";
+            progressText.Text = e.UserState?.ToString();
+        }
+
+        private void worker_DoWork(object? sender, DoWorkEventArgs e)
+        {
+            var worker = sender as BackgroundWorker;
+            
+            var scripts = FilesIO.ReadFileToCompletetion(sourceFolderTxt);
+
+            int processed = 0;
+            int total = scripts.Count;
+            int percent = 0;
             foreach (var script in scripts)
             {
-                if (x == 0)
+                worker.ReportProgress(percent, $"Processing {script.Key}...");
+
+                try
                 {
-                    x = 1;
-                    continue;
+                    SQLToExcelHelper.SQLToCSV2(destinationFolderTxt, script.Value, script.Key);
                 }
-                progressText.Text = $"Processing {script.Key}.sql ...";
-                SQLToExcelHelper.SQLToCSV2(script.Value, script.Key);
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                processed++;
+                percent = (int)(((double)processed / (double)total) * 100);
+                
+                if(processed == total)
+                    worker.ReportProgress(percent, "Done");
             }
-            
-            var result = MessageBox.Show("Done!");
+        }
+
+        private void worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
+        {
+            var result = MessageBox.Show(owner: this, "Done!");
             if (result == MessageBoxResult.OK)
             {
-                progressBar.Visibility = Visibility.Hidden;
+                progressBd.Visibility = Visibility.Hidden;
+                RunScriptsToExcel.IsEnabled = true;
+            }
+        }
+
+        private void CancelScriptRun_Click(object sender, RoutedEventArgs e)
+        {
+            worker.CancelAsync();
+            var result = MessageBox.Show(owner: this, "Cancelled");
+            if (result == MessageBoxResult.OK)
+            {
+                progressBd.Visibility = Visibility.Hidden;
+                RunScriptsToExcel.IsEnabled = true;
             }
         }
     }
