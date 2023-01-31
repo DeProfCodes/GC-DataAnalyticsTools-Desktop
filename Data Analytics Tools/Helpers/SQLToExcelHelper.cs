@@ -10,14 +10,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Application = Microsoft.Office.Interop.Excel.Application;
+using Microsoft.Data.SqlClient;
 
 namespace Data_Analytics_Tools.Helpers
 {
     public class SQLToExcelHelper
     {
-        private static string connection = "Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database=C1_2023;User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;MultipleActiveResultSets=true";
-        private static string destinationFolder = "C:\\Users\\TelkomTemp1\\Source\\Repos\\GC-DataAnalyticsTools-Desktop\\Data Analytics Tools\\Excel Files Output\\";
-
+        //private static string connection = "Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database=C1_2023;User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+        private static string connection = "Server=PSONA90ZATCWI\\TDAB;Database=C1_2023;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+        
         private static string GetExcelColumnName(int columnNumber)
         {
             string columnName = "";

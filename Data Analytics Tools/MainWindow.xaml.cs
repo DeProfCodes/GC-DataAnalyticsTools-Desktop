@@ -25,18 +25,20 @@ namespace Data_Analytics_Tools
     /// </summary>
     public partial class MainWindow : Window
     {
-        SQL sql;
         BackgroundWorker worker;
-        private string sourceFolderTxt;
-        private string destinationFolderTxt;
+        private string sourceFolderTxt = "";
+        private string destinationFolderTxt = "";
 
         public MainWindow()
         {
             InitializeComponent();
-            sql = new SQL();
-
+            
             worker = new BackgroundWorker();
             worker.WorkerSupportsCancellation = true;
+            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+            worker.WorkerReportsProgress = true;
+            worker.DoWork += worker_DoWork;
+            worker.ProgressChanged += worker_ProgressChanged;
 
             var savedSrcFolder = FilesIO.GetSavedSourceFolder();
             var savedDstFolder = FilesIO.GetSavedDestinationFolder();
@@ -98,10 +100,6 @@ namespace Data_Analytics_Tools
             
             FilesIO.SaveDirectories(sourceFolderTxt, destinationFolderTxt);
 
-            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
-            worker.WorkerReportsProgress = true;
-            worker.DoWork += worker_DoWork;
-            worker.ProgressChanged += worker_ProgressChanged;
             worker.RunWorkerAsync();
         }
 
@@ -114,30 +112,44 @@ namespace Data_Analytics_Tools
 
         private void worker_DoWork(object? sender, DoWorkEventArgs e)
         {
-            var worker = sender as BackgroundWorker;
-            
-            var scripts = FilesIO.ReadFileToCompletetion(sourceFolderTxt);
-
-            int processed = 0;
-            int total = scripts.Count;
-            int percent = 0;
-            foreach (var script in scripts)
+            try
             {
-                worker.ReportProgress(percent, $"Processing {script.Key}...");
+                var worker = sender as BackgroundWorker;
 
-                try
+                var scripts = FilesIO.ReadFileToCompletetion(sourceFolderTxt);
+
+                int processed = 0;
+                int total = scripts.Count;
+                int percent = 0;
+                foreach (var script in scripts)
                 {
-                    SQLToExcelHelper.SQLToCSV2(destinationFolderTxt, script.Value, script.Key);
+                    worker.ReportProgress(percent, $"Processing {script.Key}...");
+
+                    try
+                    {
+                        SQLToExcelHelper.SQLToCSV2(destinationFolderTxt, script.Value, script.Key);
+
+                        processed++;
+                        percent = (int)(((double)processed / (double)total) * 100);
+
+                        if (processed == total)
+                            worker.ReportProgress(percent, "Done");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message, "Error12", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
-                catch (Exception ex)
+            }
+            catch(Exception ex)
+            {
+                var result = MessageBox.Show(ex.Message, "Error1", MessageBoxButton.OK, MessageBoxImage.Error);
+                worker.CancelAsync();
+                if (result == MessageBoxResult.OK)
                 {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    progressBd.Visibility = Visibility.Hidden;
+                    RunScriptsToExcel.IsEnabled = true;
                 }
-                processed++;
-                percent = (int)(((double)processed / (double)total) * 100);
-                
-                if(processed == total)
-                    worker.ReportProgress(percent, "Done");
             }
         }
 

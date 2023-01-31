@@ -14,38 +14,61 @@ namespace Data_Analytics_Tools.Helpers
             var projectDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName;
             var path = $"{projectDirectory}\\Folders\\memory\\LastKnownDirectories.txt";
 
+            if (!File.Exists(path))
+            {
+                File.Create(path) ;
+            }
             return path;
         }
 
         public static void SaveDirectories(string source, string destination)
         {
-            var path = GetMemoryFile();
-            File.WriteAllText(path, $"{source},{destination}"); 
+            try
+            {
+                var path = GetMemoryFile();
+                File.WriteAllText(path, $"{source},{destination}");
+            }
+            catch
+            {
+                
+            }
         }
 
         public static string GetSavedSourceFolder()
         {
-            var path = GetMemoryFile();
-            var directories = File.ReadAllText(path);
+            try
+            {
+                var path = GetMemoryFile();
+                var directories = File.ReadAllText(path);
 
-            var data = directories.Split(",");
-            
-            if(data.Length > 1)
-                return data[0];
+                var data = directories.Split(",");
 
+                if (data.Length > 1)
+                    return data[0];
+            }
+            catch
+            {
+                
+            }
             return "C:\\";
         }
 
         public static string GetSavedDestinationFolder()
         {
-            var path = GetMemoryFile();
-            var directories = File.ReadAllText(path);
+            try
+            {
+                var path = GetMemoryFile();
+                var directories = File.ReadAllText(path);
 
-            var data = directories.Split(",");
+                var data = directories.Split(",");
 
-            if (data.Length > 1)
-                return data[1];
-
+                if (data.Length > 1)
+                    return data[1];
+            }
+            catch
+            {
+                
+            }
             return "C:\\";
         }
 

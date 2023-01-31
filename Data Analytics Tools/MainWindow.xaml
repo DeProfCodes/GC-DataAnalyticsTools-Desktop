@@ -9,7 +9,7 @@
         Height="500" 
         Width="800"
         ResizeMode="NoResize"
-        Icon="/resources/img/logo.ico">
+        >
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
