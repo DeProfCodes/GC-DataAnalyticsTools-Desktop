@@ -24,7 +24,7 @@ namespace Data_Analytics_Tools.Helpers
         {
             //Server=<server_IP>\\MSSQLSERVER, port; Uid=root; Pwd=password; Database=database_name
             //string connectionString = "Server=(localdb)\\mssqllocaldb;Database=C1_2023;Trusted_Connection=True;MultipleActiveResultSets=true";
-            string connectionString = "Server=(localdb)\\mssqllocaldb;Database=C1_2023;Trusted_Connection=True;MultipleActiveResultSets=true";
+            string connectionString = "Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database=C1_2023;User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;MultipleActiveResultSets=true";
             Connection = new SqlConnection(connectionString);
             command = new SqlCommand() { Connection = Connection };
         }

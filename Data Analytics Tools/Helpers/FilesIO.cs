@@ -9,15 +9,26 @@ namespace Data_Analytics_Tools.Helpers
 {
     public class FilesIO
     {
-        public static string ReadFileToCompletetion()
+        public static Dictionary<string, string> ReadFileToCompletetion()
         {
-            string projectDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName;
-            string path = $"{projectDirectory}\\Folders\\SqlScripts\\5G script.txt";
+            Dictionary<string, string> scripts = new Dictionary<string, string>();
 
-            // Calling the ReadAllLines() function
-            string script = File.ReadAllText(path);
+            var files = new List<string>()
+            {
+                "5G script", "Custom  Ping CDR", "Custom Data CDR",
+                "Custom Streaming CDR", "Customized Voice CDR", "MO MT Voice CDR",
+                "MOS samples perfected", "VDC Custom Data CDR", "VDC Custom Streaming CDR"
+            };
 
-            return script;
+            var projectDirectory = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName;
+
+            foreach (var file in files) 
+            {
+                var path = $"{projectDirectory}\\Folders\\SqlScripts\\{file}.sql";
+                var script = File.ReadAllText(path);
+                scripts.Add($"{file}.xlsx", script);
+            }
+            return scripts;
         }
     }
 }

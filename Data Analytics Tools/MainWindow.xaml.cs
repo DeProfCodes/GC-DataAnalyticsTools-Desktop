@@ -35,11 +35,27 @@ namespace Data_Analytics_Tools
 
         private void RunScriptsToExcel_Click(object sender, RoutedEventArgs e)
         {
-            progressBar.Visibility = Visibility.Visible;
+            progressSp.Visibility = Visibility.Visible;
 
-            var script = FilesIO.ReadFileToCompletetion();
+            var scripts = FilesIO.ReadFileToCompletetion();
 
-            sql.RunSelectQuery(script);
+            int x = 0;
+            foreach (var script in scripts)
+            {
+                if (x == 0)
+                {
+                    x = 1;
+                    continue;
+                }
+                progressText.Text = $"Processing {script.Key}.sql ...";
+                SQLToExcelHelper.SQLToCSV2(script.Value, script.Key);
+            }
+            
+            var result = MessageBox.Show("Done!");
+            if (result == MessageBoxResult.OK)
+            {
+                progressBar.Visibility = Visibility.Hidden;
+            }
         }
     }
 }

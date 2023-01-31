@@ -5,9 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Data_Analytics_Tools"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Gcwensa Data Tools" 
+        Height="450" 
+        Width="800"
+        ResizeMode="NoResize">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
@@ -22,9 +26,44 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
+
+        <Image 
+            x:Name="logo"
+            Grid.Row="1"
+            Grid.Column="0"
+            Source="/resources/img/logo.png"
+            Stretch="Uniform"
+            />
+
+        <TextBlock
+            Name="appName"
+            Foreground="DarkOrange"
+            Grid.Row="1"
+            Grid.Column="1"
+            Grid.ColumnSpan="3"
+            Text="Gcwensa Data Analytics"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            FontSize="30"
+            FontWeight="Bold"
+            />
+
+        <TextBlock
+            Name="welcome"
+            Grid.Row="2"
+            Grid.Column="1"
+            Grid.ColumnSpan="3"
+            Text="Run scripts saved in source folder and save into excel files stored in destination folder"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            TextWrapping="Wrap"
+            TextAlignment="Center"
+            FontSize="17"
+            FontWeight="Bold"
+            />
         
         <Button 
-            Grid.Row="1"
+            Grid.Row="2"
             Grid.Column="2"
             Content="Download From FTP " 
             HorizontalAlignment="Left" 
@@ -32,34 +71,153 @@
             Height="33"
             Padding="5"
             Width="Auto" 
+            Visibility="Hidden"
             Click="Button_Click"/>
+ 
+        <StackPanel
+            Name="progressSp"
+            Grid.Row="4"
+            Grid.Column="1"
+            Grid.ColumnSpan="3"
+            Visibility="Hidden"
+            Orientation="Vertical">
+            
+            <ProgressBar
+                Name="progressBar" 
+                Minimum="0" 
+                Maximum="100" 
+                Height="20"
+                Width="250"
+                IsIndeterminate="True"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                />
 
-        <Button 
-            x:Name="RunScriptsToExcel"
-            Grid.Row="1"
-            Grid.Column="3"
-            Content="Run Script To Excel" 
-            HorizontalAlignment="Left" 
-            VerticalAlignment="Center" 
-            Height="33"
-            Padding="5"
-            Width="Auto" Click="RunScriptsToExcel_Click" />
+            <TextBlock 
+                Name="progressText"
+                HorizontalAlignment="Center"
+                Text="Progress"
+                TextWrapping="WrapWithOverflow"
+                Margin="10"
+                FontSize="12"/>
+        </StackPanel>
 
-        <ProgressBar
+        <TextBlock
+                Grid.Row="3"
+                Grid.Column="1"
+                Text="choose source folder"
+                VerticalAlignment="Center"
+                Margin="15,0,0,0"
+                />
+        
+        <StackPanel
+            Name="sourceFolder"
             Grid.Row="3"
             Grid.Column="2"
             Grid.ColumnSpan="2"
-            Name="progressBar" 
-            Minimum="0" 
-            Maximum="100" 
-            Height="20"
-            Width="250"
-            IsIndeterminate="True"
-            Visibility="Hidden"
-            VerticalAlignment="Top"
-            HorizontalAlignment="Left"
-            />
+            Visibility="Visible"
+            Orientation="Horizontal">
 
+            
+
+            <TextBox
+                Text="F:\Proficient\Softwares\GC-DataAnalyticsTools-Desktop\Data Analytics Tools\Folders\SqlScripts"
+                Width="200"
+                Height="25"
+                VerticalAlignment="Center"
+                Margin="10,0,0,0"
+                Padding="0,4"
+                TextWrapping="WrapWithOverflow"
+                />
+
+            <Button
+                Content="Select folder"
+                Background="Orange"
+                Foreground="White"
+                Width="Auto"
+                Height="25"
+                BorderThickness="0,1,1,1"
+                Margin="-10,0,0,0"
+                Padding="5,0,5,0"
+                />
+        </StackPanel>
+        
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="1"
+            Grid.ColumnSpan="4"
+            Text="F:\Proficient\Softwares\GC-DataAnalyticsTools-Desktop\Data Analytics Tools\Folders\SqlScripts"
+            VerticalAlignment="Bottom"
+            Padding="25,0,0,0"
+            FontStyle="Italic"
+            FontWeight="Bold"
+            FontSize="11"/>
+        
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="1"
+            Text="choose destination folder"
+            VerticalAlignment="Center"
+            Margin="15,0,0,0"
+            />
+        
+        <StackPanel
+            Name="destinationFolder"
+            Grid.Row="4"
+            Grid.Column="2"
+            Grid.ColumnSpan="2"
+            Visibility="Visible"
+            VerticalAlignment="Center"
+            Orientation="Horizontal">
+
+            <TextBox
+                Text="F:\Proficient\Softwares\GC-DataAnalyticsTools-Desktop\Data Analytics Tools\Folders\SqlScripts"
+                Width="200"
+                Height="25"
+                VerticalAlignment="Center"
+                Margin="10,0,0,0"
+                Padding="0,4"
+                TextWrapping="WrapWithOverflow"
+                />
+
+            <Button
+                Content="Select folder"
+                Background="Orange"
+                Foreground="White"
+                Width="Auto"
+                Height="25"
+                BorderThickness="0,1,1,1"
+                Margin="-10,0,0,0"
+                Padding="5,0,5,0"
+                />
+        </StackPanel>
+
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="1"
+            Grid.ColumnSpan="4"
+            Text="F:\Proficient\Softwares\GC-DataAnalyticsTools-Desktop\Data Analytics Tools\Folders\SqlScripts"
+            VerticalAlignment="Bottom"
+            FontStyle="Italic"
+            FontWeight="Bold"
+            Padding="25,0,0,0"
+            FontSize="11"/>
+
+        <Button 
+            x:Name="RunScriptsToExcel"
+            Grid.Row="5"
+            Grid.Column="2"
+            Content="Run Script To Excel" 
+            HorizontalAlignment="Center" 
+            VerticalAlignment="Bottom" 
+            Height="Auto"
+            Padding="10"
+            FontSize="14"
+            FontWeight="Bold"
+            Width="Auto" 
+            Background="Orange"
+            Foreground="White"
+            Click="RunScriptsToExcel_Click" />
     </Grid>
 
 </Window>
