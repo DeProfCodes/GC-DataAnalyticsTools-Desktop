@@ -11,15 +11,29 @@ using System.Threading.Tasks;
 using System.Windows;
 using Application = Microsoft.Office.Interop.Excel.Application;
 using Microsoft.Data.SqlClient;
+using System.Windows.Media.Animation;
+using System.ComponentModel;
 
 namespace Data_Analytics_Tools.Helpers
 {
     public class SQLToExcelHelper
     {
-        //private static string connection = "Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database=C1_2023;User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
-        private static string connection = "Server=PSONA90ZATCWI\\TDAB;Database=C1_2023;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
-        
-        private static string GetExcelColumnName(int columnNumber)
+        //private string connection = "Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database=C1_2023;User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+        private string connection = "Server=PSONA90ZATCWI\\TDAB;Database=C1_2023;User Id=VDC_user;Password=bmw%%2022Vdc;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+        private volatile bool isCancelRequested;
+
+        public SQLToExcelHelper()
+        {
+            isCancelRequested = false;
+        }
+
+        public void SetDatabaseName(string databaseName)
+        {
+            //connection = $"Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database={databaseName};User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+            connection = $"Server=PSONA90ZATCWI\\TDAB;Database={databaseName};User Id=VDC_user;Password=bmw%%2022Vdc;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+        }
+
+        private string GetExcelColumnName(int columnNumber)
         {
             string columnName = "";
 
@@ -32,8 +46,12 @@ namespace Data_Analytics_Tools.Helpers
 
             return columnName;
         }
+        public void CancelWork()
+        {
+            isCancelRequested = true;
+        }
 
-        public static void SQLToCSV2(string destinationFolder, string query, string filename)
+        public void ReadSQLResultToExcel(string destinationFolder, string query, string filename)
         {
             try
             {
@@ -49,8 +67,7 @@ namespace Data_Analytics_Tools.Helpers
                 // Loop through the fields and add headers
                 var fontBold = workbook.CreateFont();
                 fontBold.IsBold = true;
-                fontBold.Boldweight = (short)FontBoldWeight.Bold;
-
+                
                 var style = workbook.CreateCellStyle();
                 style.SetFont(fontBold);
 
@@ -68,14 +85,32 @@ namespace Data_Analytics_Tools.Helpers
                     cell.CellStyle = style;
                 }
 
+                if (isCancelRequested)
+                    return;
+
                 // Loop through the rows and output the data
                 int rowCount = 1;
                 while (dr.Read())
                 {
+                    if (isCancelRequested)
+                        return;
+
                     IRow rowD = sheet1.CreateRow(rowCount);
                     for (int i = 0; i < dr.FieldCount; i++)
                     {
-                        string value = dr[i].ToString();
+                        if (isCancelRequested)
+                            return;
+
+                        var value = "NULL";
+                        if (dr[i] is DateTime)
+                        {
+                            var date = (DateTime)dr[i];
+                            value = date.ToString("dd-MM-yyyy HH:mm:ss.FFF");
+                        }
+                        else if(!string.IsNullOrEmpty(dr[i].ToString()))
+                        {
+                            value = dr[i].ToString();
+                        }
                         rowD.CreateCell(i).SetCellValue(value);
                     }
                     rowCount++;

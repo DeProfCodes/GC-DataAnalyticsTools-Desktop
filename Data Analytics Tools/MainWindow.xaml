@@ -89,7 +89,7 @@
             BorderThickness="1" 
             DockPanel.Dock="Top"
             Visibility="Hidden">
-            
+
             <StackPanel
                 Name="progressSp"
                 Orientation="Vertical">
@@ -142,9 +142,30 @@
 
             </StackPanel>
         </Border>
-        
+
         <TextBlock
                 Grid.Row="3"
+                Grid.Column="1"
+                Text="Enter Database Name"
+                VerticalAlignment="Center"
+                Margin="15,0,0,0"
+                />
+
+        <TextBox
+            Grid.Row="3"
+            Grid.Column="2"
+            Name="databaseName"
+            Text="C1_2023"
+            Width="Auto"
+            Height="25"
+            VerticalAlignment="Center"
+            Margin="10,0,0,0"
+            Padding="5,4"
+            TextWrapping="WrapWithOverflow"
+            />
+
+        <TextBlock
+                Grid.Row="4"
                 Grid.Column="1"
                 Text="choose source folder"
                 VerticalAlignment="Center"
@@ -152,7 +173,7 @@
                 />
 
         <StackPanel
-            Grid.Row="3"
+            Grid.Row="4"
             Grid.Column="2"
             Grid.ColumnSpan="2"
             Visibility="Visible"
@@ -188,7 +209,7 @@
 
         <TextBlock
             Name="sourceFolderFull"
-            Grid.Row="3"
+            Grid.Row="4"
             Grid.Column="1"
             Grid.ColumnSpan="4"
             Text="C:\"
@@ -199,7 +220,7 @@
             FontSize="11"/>
 
         <TextBlock
-            Grid.Row="4"
+            Grid.Row="5"
             Grid.Column="1"
             Text="choose destination folder"
             VerticalAlignment="Center"
@@ -207,7 +228,7 @@
             />
 
         <StackPanel
-            Grid.Row="4"
+            Grid.Row="5"
             Grid.Column="2"
             Grid.ColumnSpan="2"
             Visibility="Visible"
@@ -243,7 +264,7 @@
 
         <TextBlock
             Name="destinationFolderFull"
-            Grid.Row="4"
+            Grid.Row="5"
             Grid.Column="1"
             Grid.ColumnSpan="4"
             Text="C:\"
@@ -255,11 +276,11 @@
 
         <Button 
             x:Name="RunScriptsToExcel"
-            Grid.Row="5"
+            Grid.Row="6"
             Grid.Column="2"
-            Content="Run Script To Excel" 
+            Content="Convert To Excel" 
             HorizontalAlignment="Center" 
-            VerticalAlignment="Bottom" 
+            VerticalAlignment="Center" 
             Height="Auto"
             Padding="10"
             FontSize="14"

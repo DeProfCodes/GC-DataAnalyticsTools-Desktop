@@ -25,14 +25,18 @@ namespace Data_Analytics_Tools
     /// </summary>
     public partial class MainWindow : Window
     {
+        SQLToExcelHelper sql;
         BackgroundWorker worker;
         private string sourceFolderTxt = "";
         private string destinationFolderTxt = "";
+        private string dbName = "";
 
         public MainWindow()
         {
             InitializeComponent();
-            
+
+            //sql = new SQLToExcelHelper();
+
             worker = new BackgroundWorker();
             worker.WorkerSupportsCancellation = true;
             worker.RunWorkerCompleted += worker_RunWorkerCompleted;
@@ -92,6 +96,15 @@ namespace Data_Analytics_Tools
 
         private void RunScriptsToExcel_Click(object sender, RoutedEventArgs e)
         {
+            if (string.IsNullOrEmpty(databaseName.Text))
+            {
+                MessageBox.Show("Please enter database name");
+                return;
+            }
+
+            dbName = databaseName.Text;
+            //sql.SetDatabaseName(dbName);
+            
             sourceFolderTxt = sourceFolderFull.Text;
             destinationFolderTxt = destinationFolderFull.Text;
 
@@ -114,7 +127,9 @@ namespace Data_Analytics_Tools
         {
             try
             {
-                var worker = sender as BackgroundWorker;
+                sql = new SQLToExcelHelper();
+                sql.SetDatabaseName(dbName);
+                //var worker = sender as BackgroundWorker;
 
                 var scripts = FilesIO.ReadFileToCompletetion(sourceFolderTxt);
 
@@ -125,9 +140,20 @@ namespace Data_Analytics_Tools
                 {
                     worker.ReportProgress(percent, $"Processing {script.Key}...");
 
+                    if (worker.CancellationPending)
+                    {
+                        var result = MessageBox.Show(owner: this, "Cancelled");
+                        if (result == MessageBoxResult.OK)
+                        {
+                            RunScriptsToExcel.IsEnabled = true;
+                            e.Cancel = true;
+                            break;
+                        }
+                    }
+
                     try
                     {
-                        SQLToExcelHelper.SQLToCSV2(destinationFolderTxt, script.Value, script.Key);
+                        sql.ReadSQLResultToExcel(destinationFolderTxt, script.Value, script.Key);
 
                         processed++;
                         percent = (int)(((double)processed / (double)total) * 100);
@@ -137,20 +163,35 @@ namespace Data_Analytics_Tools
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(ex.Message, "Error12", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        if (ex.Message.Contains("Cannot open database"))
+                        {
+                            e.Cancel = true;
+                            break;
+                        }
+                    }
+
+                    if (worker.CancellationPending)
+                    {
+                        var result = MessageBox.Show("Cancelled");
+                        if (result == MessageBoxResult.OK)
+                        {
+                            e.Cancel = true;
+                            break;
+                        }
                     }
                 }
             }
             catch(Exception ex)
             {
-                var result = MessageBox.Show(ex.Message, "Error1", MessageBoxButton.OK, MessageBoxImage.Error);
+                var result = MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 worker.CancelAsync();
                 if (result == MessageBoxResult.OK)
                 {
-                    progressBd.Visibility = Visibility.Hidden;
-                    RunScriptsToExcel.IsEnabled = true;
+                    e.Cancel = true;
                 }
             }
+            sql = null;
         }
 
         private void worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
@@ -160,17 +201,23 @@ namespace Data_Analytics_Tools
             {
                 progressBd.Visibility = Visibility.Hidden;
                 RunScriptsToExcel.IsEnabled = true;
+
+                CancelScriptRun.Content = "Abort";
+                CancelScriptRun.Width = 50;
             }
         }
 
         private void CancelScriptRun_Click(object sender, RoutedEventArgs e)
         {
-            worker.CancelAsync();
-            var result = MessageBox.Show(owner: this, "Cancelled");
-            if (result == MessageBoxResult.OK)
+            //Application.Current.Shutdown();
+            if (worker.IsBusy)
             {
-                progressBd.Visibility = Visibility.Hidden;
-                RunScriptsToExcel.IsEnabled = true;
+                worker.CancelAsync();
+                sql.CancelWork();
+                CancelScriptRun.Content = "canceling please wait...";
+                CancelScriptRun.Width = 150;
+                //CancelScriptRun.IsEnabled = false;
+                //CancelScriptRun.Background = Brushes.Tomato;
             }
         }
     }
