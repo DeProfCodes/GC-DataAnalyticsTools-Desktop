@@ -6,295 +6,52 @@
         xmlns:local="clr-namespace:Data_Analytics_Tools"
         mc:Ignorable="d"
         Title="Gcwensa Data Tools" 
-        Height="500" 
+        Height="600" 
         Width="800"
         ResizeMode="NoResize"
         >
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Image 
-            x:Name="logo"
+        <Grid
+            Grid.Row="0"
+            Grid.Column="0"
+            Margin="0,15,0,0">
+
+            <Image 
+                x:Name="logo"
+                Width="80"
+                Height="80"
+                Margin="40,0,0,0"
+                Source="/resources/img/logo.png"
+                Stretch="Uniform"
+                HorizontalAlignment="Left"
+                />
+
+            <TextBlock
+                Name="appName"
+                Foreground="DarkOrange"
+                Text="Gcwensa Data Tools"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="30"
+                FontWeight="Bold"
+                />
+        </Grid>
+        
+
+        <Frame
             Grid.Row="1"
             Grid.Column="0"
-            Source="/resources/img/logo.png"
-            Stretch="Uniform"
-            />
-
-        <TextBlock
-            Name="appName"
-            Foreground="DarkOrange"
-            Grid.Row="1"
-            Grid.Column="1"
-            Grid.ColumnSpan="3"
-            Text="Gcwensa Data Analytics"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            FontSize="30"
-            FontWeight="Bold"
-            />
-
-        <TextBlock
-            Name="welcome"
-            Grid.Row="2"
-            Grid.Column="1"
-            Grid.ColumnSpan="3"
-            Text="Run scripts saved in source folder and save into excel files stored in destination folder"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Bottom"
-            TextWrapping="Wrap"
-            TextAlignment="Center"
-            FontSize="17"
-            FontFamily="Arial"
-            FontWeight="Bold"
-            />
-
-        <Button 
-            Grid.Row="2"
-            Grid.Column="2"
-            Content="Download From FTP " 
-            HorizontalAlignment="Left" 
-            VerticalAlignment="Center" 
-            Height="33"
-            Padding="5"
-            Width="Auto" 
-            Visibility="Hidden"
-            Click="Button_Click"/>
-
-        <Border
-            Name="progressBd"
-            Grid.Row="3"
-            Grid.RowSpan="2"
-            Grid.Column="1"
-            Grid.ColumnSpan="3"
-            CornerRadius="6" 
-            BorderBrush="Gray" 
-            Background="White"
-            Panel.ZIndex="10" 
-            BorderThickness="1" 
-            DockPanel.Dock="Top"
-            Visibility="Hidden">
-
-            <StackPanel
-                Name="progressSp"
-                Orientation="Vertical">
-
-                <StackPanel
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Margin="0,50,0,0">
-
-                    <ProgressBar
-                        Name="progressBar" 
-                        Minimum="0" 
-                        Maximum="100" 
-                        Height="20"
-                        Width="250"
-                        Value="0"
-                    />
-                    <TextBlock
-                        Name="progressBarTxt"
-                        Text="0%"
-                        Padding="5,5"
-                        FontWeight="Bold"/>
-
-                </StackPanel>
-
-
-                <TextBlock 
-                    Name="progressText"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Text="Progress"
-                    TextWrapping="WrapWithOverflow"
-                    Margin="10"
-                    FontSize="12"/>
-
-                <Button
-                    Name="CancelScriptRun"
-                    Content="Abort"
-                    Background="Red"
-                    Foreground="white"
-                    Width="50"
-                    Height="Auto" Click="CancelScriptRun_Click">
-                    <Button.Resources>
-                        <Style TargetType="{x:Type Border}">
-                            <Setter Property="CornerRadius" Value="4"/>
-                        </Style>
-                    </Button.Resources>
-                </Button>
-
-            </StackPanel>
-        </Border>
-
-        <TextBlock
-                Grid.Row="3"
-                Grid.Column="1"
-                Text="Enter Database Name"
-                VerticalAlignment="Center"
-                Margin="15,0,0,0"
-                />
-
-        <TextBox
-            Grid.Row="3"
-            Grid.Column="2"
-            Name="databaseName"
-            Text="C1_2023"
-            Width="Auto"
-            Height="25"
-            VerticalAlignment="Center"
-            Margin="10,0,0,0"
-            Padding="5,4"
-            TextWrapping="WrapWithOverflow"
-            />
-
-        <TextBlock
-                Grid.Row="4"
-                Grid.Column="1"
-                Text="choose source folder"
-                VerticalAlignment="Center"
-                Margin="15,0,0,0"
-                />
-
-        <StackPanel
-            Grid.Row="4"
-            Grid.Column="2"
-            Grid.ColumnSpan="2"
-            Visibility="Visible"
-            Orientation="Horizontal">
-
-            <TextBox
-                Name="sourceFolder"
-                Text="C:\"
-                Width="200"
-                Height="25"
-                VerticalAlignment="Center"
-                Margin="10,0,0,0"
-                Padding="5,4"
-                TextWrapping="WrapWithOverflow"
-                IsReadOnly="True"
-                Background="WhiteSmoke"
-                />
-
-            <Button
-                Name="SelectSource"
-                Content="Select folder"
-                Background="Orange"
-                Foreground="White"
-                Width="Auto"
-                Height="25"
-                BorderThickness="0,1,1,1"
-                Margin="-10,0,0,0"
-                Padding="5,0,5,0" 
-                Click="SelectSource_Click" 
-                
-                />
-        </StackPanel>
-
-        <TextBlock
-            Name="sourceFolderFull"
-            Grid.Row="4"
-            Grid.Column="1"
-            Grid.ColumnSpan="4"
-            Text="C:\"
-            VerticalAlignment="Bottom"
-            Padding="25,0,0,0"
-            FontStyle="Italic"
-            FontWeight="Bold"
-            FontSize="11"/>
-
-        <TextBlock
-            Grid.Row="5"
-            Grid.Column="1"
-            Text="choose destination folder"
-            VerticalAlignment="Center"
-            Margin="15,0,0,0"
-            />
-
-        <StackPanel
-            Grid.Row="5"
-            Grid.Column="2"
-            Grid.ColumnSpan="2"
-            Visibility="Visible"
-            VerticalAlignment="Center"
-            Orientation="Horizontal">
-
-            <TextBox
-                Name="destinationFolder"
-                Text="C:\"
-                Width="200"
-                Height="25"
-                VerticalAlignment="Center"
-                Margin="10,0,0,0"
-                Padding="5,4"
-                TextWrapping="WrapWithOverflow"
-                Background="WhiteSmoke"
-                IsReadOnly="True"
-                />
-
-            <Button
-                Name="SelectDestination"
-                Content="Select folder"
-                Background="Orange"
-                Foreground="White"
-                Width="Auto"
-                Height="25"
-                BorderThickness="0,1,1,1"
-                Margin="-10,0,0,0"
-                Padding="5,0,5,0" 
-                Click="SelectDestination_Click"
-                />
-        </StackPanel>
-
-        <TextBlock
-            Name="destinationFolderFull"
-            Grid.Row="5"
-            Grid.Column="1"
-            Grid.ColumnSpan="4"
-            Text="C:\"
-            VerticalAlignment="Bottom"
-            FontStyle="Italic"
-            FontWeight="Bold"
-            Padding="25,0,0,0"
-            FontSize="11"/>
-
-        <Button 
-            x:Name="RunScriptsToExcel"
-            Grid.Row="6"
-            Grid.Column="2"
-            Content="Convert To Excel" 
-            HorizontalAlignment="Center" 
-            VerticalAlignment="Center" 
-            Height="Auto"
-            Padding="10"
-            FontSize="14"
-            FontWeight="Bold"
-            Width="Auto" 
-            Background="Orange"
-            Foreground="White"
-            Click="RunScriptsToExcel_Click">
-            <Button.Resources>
-                <Style TargetType="{x:Type Border}">
-                    <Setter Property="CornerRadius" Value="10"/>
-                </Style>
-            </Button.Resources>
-        </Button>
+            x:Name="Main"
+            Height="400"
+            NavigationUIVisibility="Automatic"/>
     </Grid>
 
 </Window>

@@ -18,8 +18,8 @@ namespace Data_Analytics_Tools.Helpers
 {
     public class SQLToExcelHelper
     {
-        //private string connection = "Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database=C1_2023;User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
-        private string connection = "Server=PSONA90ZATCWI\\TDAB;Database=C1_2023;User Id=VDC_user;Password=bmw%%2022Vdc;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+        private string connection = "Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database=C1_2023;User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+        //private string connection = "Server=PSONA90ZATCWI\\TDAB;Database=C1_2023;User Id=VDC_user;Password=bmw%%2022Vdc;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
         private volatile bool isCancelRequested;
 
         public SQLToExcelHelper()
@@ -29,8 +29,8 @@ namespace Data_Analytics_Tools.Helpers
 
         public void SetDatabaseName(string databaseName)
         {
-            //connection = $"Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database={databaseName};User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
-            connection = $"Server=PSONA90ZATCWI\\TDAB;Database={databaseName};User Id=VDC_user;Password=bmw%%2022Vdc;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+            connection = $"Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database={databaseName};User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+            //connection = $"Server=PSONA90ZATCWI\\TDAB;Database={databaseName};User Id=VDC_user;Password=bmw%%2022Vdc;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
         }
 
         private string GetExcelColumnName(int columnNumber)
