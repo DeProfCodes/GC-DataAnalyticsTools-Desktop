@@ -32,6 +32,9 @@ namespace Data_Analytics_Tools.Pages
         private DateTime StartDate;
         private DateTime EndDate;
 
+        private int totalLogHashes;
+        private string terminationMessage;
+
         public ApacheToMySQL()
         {
             InitializeComponent();
@@ -48,15 +51,9 @@ namespace Data_Analytics_Tools.Pages
 
         private async void ApacheLogDownloadAndUpload_Click(object sender, RoutedEventArgs e)
         {
-            
             DateTime.TryParse(startDate.Text, out StartDate);
             DateTime.TryParse(endDate.Text, out EndDate);
             progressBd.Visibility = Visibility.Visible;
-
-            apacheHelper = new ApacheLogFilesHelper();
-
-            await apacheHelper.CreateTablesSchema();
-            await apacheHelper.CreateLogFileListForDownload(StartDate, EndDate);
 
             worker.RunWorkerAsync();
         }
@@ -66,6 +63,9 @@ namespace Data_Analytics_Tools.Pages
             try
             {
                 apacheHelper = new ApacheLogFilesHelper();
+                apacheHelper.CreateTablesSchema();
+                apacheHelper.CreateLogFileListForDownload(StartDate, EndDate);
+
                 apacheHelper.isRunning = true;
 
                 apacheHelper.DownloadAndImportApacheFilesToMySQL(StartDate, EndDate, worker);
@@ -82,46 +82,80 @@ namespace Data_Analytics_Tools.Pages
 
         private void worker_ProgressChanged(object? sender, ProgressChangedEventArgs e)
         {
-            var message = e.UserState?.ToString() ?? "";
-            var data = message.Split("#");
-
-            if (data.Length > 1)
+            try
             {
-                if (data[0] == "TotalLogHashes")
-                {
-                    LogHashNumberTotal.Text = data[1];
-                }
-                if (data[0] == "logProcessingName")
-                {
-                    logProcessingName.Text = data[1];
-                }
-                if (data[0] == "logTableProcessed" && data[1] !="0")
-                {
-                    var tableCount = Convert.ToDouble(data[1]);
-                    int tableProgress = (int)((tableCount / 171.0) * 100); 
+                var message = e.UserState?.ToString() ?? "";
+                var data = message.Split("#");
 
-                    tableProcessedCount.Text = data[1];
-                    tableProgressBar.Value = tableProgress;
-                    tableProgressBarTxt.Text = $"{tableProgress}%";
+                if (data.Length > 1)
+                {
+                    if (data[0] == "TotalLogHashes")
+                    {
+                        LogHashNumberCount.Text = "0";
+                        LogHashNumberTotal.Text = data[1];
+                        totalLogHashes = Convert.ToInt32(data[1]);
+                    }
+                    else if (data[0] == "logProcessingName")
+                    {
+                        logProcessingName.Text = data[1];
+                    }
+                    else if (data[0] == "logTableProcessed" && data[1] != "0")
+                    {
+                        var tableCount = Convert.ToDouble(data[1]);
+                        int tableProgress = (int)((tableCount / 171.0) * 100);
+
+                        tableProcessedCount.Text = data[1];
+                        tableProgressBar.Value = tableProgress;
+                        tableProgressBarTxt.Text = $"{tableProgress}%";
+                    }
+                    else if (data[0] == "LogHashNumberCount")
+                    {
+                        var logHashCount = Convert.ToDouble(data[1]);
+                        double logHashesProgress = Math.Round(((logHashCount / totalLogHashes) * 100), 1);
+
+                        LogHashNumberCount.Text = data[1];
+                        logHashProgressBar.Value = logHashesProgress;
+                        logHashesProgressBarTxt.Text = $"{logHashesProgress}%";
+                    }
+                    else if (data[0] == "downloadsCount")
+                    {
+                        downloadsCountTxt.Text = data[1];
+                    }
+                    else if (data[0] == "importsCount")
+                    {
+                        importsCountTxt.Text = data[1];
+                    }
                 }
             }
-            
-            //progressBar.Value = e.ProgressPercentage;
-            //progressBarTxt.Text = e.ProgressPercentage + "%";
-            //progressText.Text = e.UserState?.ToString();
+            catch (Exception ex)
+            {
+                
+            }
         }
 
         private void worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
         {
-            var result = MessageBox.Show("Done!");
+            var result = MessageBox.Show($"{terminationMessage}");
             if (result == MessageBoxResult.OK)
             {
                 progressBd.Visibility = Visibility.Hidden;
                 
                 CancelScriptRun.Content = "Abort";
-                CancelScriptRun.Width = 50;
+                CancelScriptRun.Width = 70;
+
+                logProcessingName.Text = "loading...";
+
+                tableProcessedCount.Text = "0";
+                tableProgressBar.Value = 0;
+                tableProgressBarTxt.Text = "0%";
+
+                LogHashNumberCount.Text = "-";
+                logHashProgressBar.Value = 0;
+                logHashesProgressBarTxt.Text = "0%";
+                LogHashNumberTotal.Text = "-";
+
+                downloadsCountTxt.Text = "0";
             }
-            
         }
 
         private void CancelScriptRun_Click(object sender, RoutedEventArgs e)
@@ -136,6 +170,12 @@ namespace Data_Analytics_Tools.Pages
                 //CancelScriptRun.IsEnabled = false;
                 //CancelScriptRun.Background = Brushes.Tomato;
             }
+        }
+
+        private void CancelScriptRun_Click_1(object sender, RoutedEventArgs e)
+        {
+            apacheHelper.isRunning = false;
+            apacheHelper.TerminationMessage = "Operation Cancelled!";
         }
     }
 }

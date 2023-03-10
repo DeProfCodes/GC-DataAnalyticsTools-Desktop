@@ -32,6 +32,7 @@ namespace Data_Analytics_Tools.Helpers
         private string databaseName = "";
 
         public bool isRunning { get; set; }
+        public string TerminationMessage { get; set; }
 
         public ApacheLogFilesHelper()
         {
@@ -192,7 +193,7 @@ namespace Data_Analytics_Tools.Helpers
             return query;
         }
 
-        public async Task CreateTablesSchema(bool schemaOnly = false)
+        public async void CreateTablesSchema(bool schemaOnly = false)
         {
             await sql.CreateDatabase(databaseName);
 
@@ -227,7 +228,7 @@ namespace Data_Analytics_Tools.Helpers
         #endregion
 
         #region Downloading Apache Logs
-        public async Task CreateLogFileListForDownload(DateTime startDate, DateTime endDate)
+        public async void CreateLogFileListForDownload(DateTime startDate, DateTime endDate)
         {
             string logHashesListFile = apacheLogsDirectory_LogHashes + "log_hash_keys.txt";
             string hashListFileForDownloadDir = apacheLogsDirectory_LogHashes + "log_fileList_for_download.txt";
@@ -558,6 +559,11 @@ namespace Data_Analytics_Tools.Helpers
 
             foreach (var apacheLink in allApacheLinks)
             {
+                if (!isRunning)
+                {
+                    break;    
+                }
+
                 try
                 {
                     var logHash = long.Parse(GetApacheFileLogHash(apacheLink));
@@ -589,39 +595,34 @@ namespace Data_Analytics_Tools.Helpers
                     int tableNo = GetTableNumber(localApacheFileDir);
 
                     worker.ReportProgress(0, $"logTableProcessed#{tableNo}");
-                    Thread.Sleep(500);
-
-
+                    
                     if (lastLogHash != logHash)
                     {
                         if (lastLogHash != 0L)
                         {
-                            worker.ReportProgress(0, $"logTableProcessed#{tableNo}");
+                            worker.ReportProgress(0, $"LogHashNumberCount#{totalProcessedLogs}");
                         }
                         lastLogHash = logHash;
                         totalProcessedLogs++;
                     }
-                    continue;
                     
                     bool downloaded = DownloadApacheFileFromServer(apacheLog, apacheLink, localApacheFileDir, errorsList);
 
                     if (downloaded)
                     {
                         downloadsCount++;
-                        //await signalR.SendApacheLogsProcess("download", $"'{apacheLog.LogTag}_{apacheFileServer}' downloaded!", "completed");
-                        //await signalR.SendApacheLogsProcess("downloadsCount", $"{downloadsCount}", "completed");
+                        worker.ReportProgress(0, $"downloadsCount#{downloadsCount}");
 
-                        message = $"Import:'<b>{apacheLog.LogTag}_{apacheFileServer}</b>' to MySQL Db = <b>{databaseName}</b>...";
+                        var logNameImport = $"Importing: {apacheLog.LogTag}_{apacheFileServer}";
 
-                        //await signalR.SendApacheLogsProcess("import", message, "started");
+                        worker.ReportProgress(0, $"logProcessingName#{logNameImport}");
 
                         int rows = await ImportApacheFileToMySQL(localApacheFileDir, errorsList);
 
                         if (rows > 0)
                         {
                             importedFilesCount++;
-                            //await signalR.SendApacheLogsProcess("import", $"'{apacheLog.LogTag}_{apacheFileServer}' imported", "completed");
-                            //await signalR.SendApacheLogsProcess("importsCount", $"{importedFilesCount}", "completed");
+                            worker.ReportProgress(0, $"importsCount#{importedFilesCount}");
                         }
 
                     }
@@ -630,6 +631,11 @@ namespace Data_Analytics_Tools.Helpers
                 {
                     errorsList.Add(e.Message);
                 }
+            }
+            if (isRunning)
+            {
+                TerminationMessage = "Download and Importing completed successfully!";
+                isRunning = false;
             }
         }
 
