@@ -1,6 +1,8 @@
 ﻿using Data_Analytics_Tools.Data;
+using Data_Analytics_Tools.Helpers;
 using Data_Analytics_Tools.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,65 +11,75 @@ namespace Data_Analytics_Tools.BusinessLogic
 {
     public class BusinessLogicData : IBusinessLogicData
     {
-        private readonly ApplicationDbContext _dbContext;
+        private SQL sql;
         public BusinessLogicData()
         {
-            
+            sql = new SQL();
+            sql.SetDatabaseName("apacheLogsToMySqlMemory");
         }
 
         public async Task AddOrUpdateApacheLogFileImport(string filePath, string filename, bool importComplete, string error)
         {
-            var existing = await _dbContext.ApacheFilesImportProgress.FirstOrDefaultAsync(x=>x.FilePath.ToLower() == filePath.ToLower());
+            var allLogs = await GetProcessedApacheFiles();
+            var existing = allLogs.FirstOrDefault(x=>x.FilePath.ToLower() == filePath.ToLower());
+            var query = "";
+
             if (existing == null)
             {
-                var newApacheImport = new ProcessedApacheFile
-                {
-                    FilePath = filePath,
-                    Filename = filename,
-                    ImportComplete = importComplete,
-                    ProcessError = error
-                };
-                _dbContext.Add(newApacheImport);
-                await _dbContext.SaveChangesAsync();
+                query = $"INSERT INTO ApacheFilesImportProgress Values('{filename}',{(importComplete?1:0)},'{error}','{filePath}','{DateTime.Now}')";
             }
             else
             {
-                existing.ImportComplete = importComplete;
-                existing.ProcessError = error;
-
-                _dbContext.Update(existing);
-                await _dbContext.SaveChangesAsync();
+                query = $"UPDATE ApacheFilesImportProgress" +
+                        $" SET ImportComplete = {(importComplete?1:0)}, ProcessError = '{error}'" +
+                        $" WHERE Id = {existing.Id}";
             }
+            await sql.RunQueryOLD(query);    
         }
 
         public async Task DeleteApacheLogFileImport(string filePath)
         {
-            var existing = await _dbContext.ApacheFilesImportProgress.FirstOrDefaultAsync(x => x.FilePath.ToLower() == filePath.ToLower());
-
-            _dbContext.Remove(existing);
-            await _dbContext.SaveChangesAsync();
+            
         }
 
         public async Task DeleteApacheLogFileImport(List<string>filePaths)
         {
-            var existingFiles = await _dbContext.ApacheFilesImportProgress.Where(x => filePaths.Contains(x.FilePath.ToLower())).ToListAsync();
-
-            _dbContext.RemoveRange(existingFiles);
-            await _dbContext.SaveChangesAsync();
+            
         }
 
-        public async Task<List<string>> GetProcessedApacheFiles()
+        public async Task<List<ProcessedApacheFile>> GetProcessedApacheFiles()
         {
-            var processed = await _dbContext.ApacheFilesImportProgress.Where(x => x.ImportComplete == true).ToListAsync();
-
-            return processed.Select(x=>x.Filename).ToList();
+            var query = "SELECT * FROM ApacheFilesImportProgress";
+            var logs = await sql.GetProcessedApacheFiles(query);
+            
+            return logs;
         }
 
-        public async Task<List<ProcessedApacheFile>> GetProcessedApacheFiles2()
+        public async Task AddOrUpdateBaseFolderDirectory(string newBaseFolder)
         {
-            //var processed = await _dbContext.ApacheFilesImportProgress.Where(x => x.ImportComplete == true).ToListAsync();
+            var query = "SELECT COUNT(*) FROM FolderMemory";
+            var count = await sql.RunQueryOLD(query, SQL.SqlExecutionType.Scalar);
 
-            return new List<ProcessedApacheFile>();
+            if (count < 1)
+            {
+                query = $"INSERT INTO FolderMemory VALUES('{newBaseFolder}','{DateTime.Now}')";
+            }
+            else
+            {
+                query = $"UPDATE FolderMemory" +
+                        $" SET BaseFolderPath='{newBaseFolder}', ModifyDate = '{DateTime.Now}'" +
+                        $" WHERE Id = 1";
+            }
+            await sql.RunQueryOLD(query);  
+        }
+
+        public string GetBaseFolder()
+        {
+            var query = "SELECT * FROM FolderMemory WHERE Id = 1";
+            
+            var baseFolder = sql.GetBaseFolder(query);
+
+            return baseFolder?.BaseFolderPath ?? "C:\\";
         }
     }
 }

@@ -71,7 +71,7 @@
             BorderThickness="1" 
             DockPanel.Dock="Top"
             Margin="0,0,0,10"
-            Visibility="Visible">
+            Visibility="Hidden">
 
             <StackPanel
                 Name="progressSp"
@@ -136,6 +136,7 @@
                         Name="tableProgressBarTxt"
                         Text="0%"
                         Padding="5,5"
+                        Width="30"
                         FontWeight="Bold"/>
 
                 </StackPanel>
@@ -257,6 +258,7 @@
                         Name="logHashesProgressBarTxt"
                         Text="0%"
                         Padding="5,5"
+                        Width="30"
                         FontWeight="Bold"/>
 
                 </StackPanel>
@@ -280,18 +282,19 @@
         </Border>
 
         <TextBlock
-                Grid.Row="3"
-                Grid.Column="1"
-                Text="Choose base folder"
-                VerticalAlignment="Center"
-                Margin="15,0,0,0"
-                />
+            Grid.Row="3"
+            Grid.Column="1"
+            Text="Choose base folder"
+            VerticalAlignment="Center"
+            Margin="15,0,0,0"
+            Visibility="Visible"
+            />
 
         <StackPanel
             Grid.Row="3"
             Grid.Column="2"
             Grid.ColumnSpan="2"
-            Visibility="Hidden"
+            Visibility="Visible"
             Orientation="Horizontal">
 
             <TextBox
@@ -317,6 +320,7 @@
                 BorderThickness="0,1,1,1"
                 Margin="-10,0,0,0"
                 Padding="5,0,5,0" 
+                Click="SelectSource_Click" 
                 />
         </StackPanel>
 
@@ -327,6 +331,7 @@
             Grid.ColumnSpan="4"
             Text="C:\"
             VerticalAlignment="Bottom"
+            Visibility="Visible"
             Padding="25,0,0,0"
             FontStyle="Italic"
             FontWeight="Bold"

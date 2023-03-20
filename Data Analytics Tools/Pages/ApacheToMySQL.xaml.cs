@@ -1,10 +1,12 @@
 ﻿using Data_Analytics_Tools.BusinessLogic;
 using Data_Analytics_Tools.Helpers;
+using Microsoft.Win32;
 using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -29,6 +31,8 @@ namespace Data_Analytics_Tools.Pages
     {
         private ApacheLogFilesHelper apacheHelper;
         private BackgroundWorker worker;
+        private IBusinessLogicData dataIO;
+
         private DateTime StartDate;
         private DateTime EndDate;
 
@@ -39,6 +43,8 @@ namespace Data_Analytics_Tools.Pages
         {
             InitializeComponent();
 
+            dataIO = new BusinessLogicData();
+
             worker = new BackgroundWorker();
             worker.WorkerSupportsCancellation = true;
             worker.RunWorkerCompleted += worker_RunWorkerCompleted;
@@ -47,6 +53,41 @@ namespace Data_Analytics_Tools.Pages
             worker.ProgressChanged += worker_ProgressChanged;
 
             progressBd.Visibility = Visibility.Hidden;
+
+            var baseFolder = dataIO.GetBaseFolder(); 
+            sourceFolder.Text = baseFolder;
+            sourceFolderFull.Text = baseFolder;
+        }
+
+        private void OpenDialog(TextBox textBox, TextBlock textBlock)
+        {
+            var dialog = new SaveFileDialog();
+            var initDirec = Directory.Exists(textBox.Text) ? textBox.Text : "C:\\";
+            dialog.InitialDirectory = initDirec; // Use current value for initial dir
+            dialog.Title = "Select a Directory"; // instead of default "Save As"
+            dialog.Filter = "Directory|*.this.directory"; // Prevents displaying files
+            dialog.FileName = "select"; // Filename will then be "select.this.directory"
+
+            if (dialog.ShowDialog() == true)
+            {
+                string path = dialog.FileName;
+                // Remove fake filename from resulting path
+                path = path.Replace("\\select.this.directory", "");
+                path = path.Replace(".this.directory", "");
+                // If user has changed the filename, create the new directory
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+                // Our final value is in path
+                textBox.Text = path;
+                textBlock.Text = path;
+            }
+        }
+
+        private void SelectSource_Click(object sender, RoutedEventArgs e)
+        {
+            OpenDialog(sourceFolder, sourceFolderFull);
         }
 
         private async void ApacheLogDownloadAndUpload_Click(object sender, RoutedEventArgs e)
@@ -55,6 +96,11 @@ namespace Data_Analytics_Tools.Pages
             DateTime.TryParse(endDate.Text, out EndDate);
             progressBd.Visibility = Visibility.Visible;
 
+            await dataIO.AddOrUpdateBaseFolderDirectory(sourceFolderFull.Text);
+
+            apacheHelper = new ApacheLogFilesHelper();
+            await apacheHelper.CreateLogFileListForDownload(StartDate, EndDate);
+            
             worker.RunWorkerAsync();
         }
 
@@ -64,8 +110,7 @@ namespace Data_Analytics_Tools.Pages
             {
                 apacheHelper = new ApacheLogFilesHelper();
                 apacheHelper.CreateTablesSchema();
-                apacheHelper.CreateLogFileListForDownload(StartDate, EndDate);
-
+               
                 apacheHelper.isRunning = true;
 
                 apacheHelper.DownloadAndImportApacheFilesToMySQL(StartDate, EndDate, worker);
@@ -135,7 +180,7 @@ namespace Data_Analytics_Tools.Pages
 
         private void worker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
         {
-            var result = MessageBox.Show($"{terminationMessage}");
+            var result = MessageBox.Show($"{apacheHelper.TerminationMessage}");
             if (result == MessageBoxResult.OK)
             {
                 progressBd.Visibility = Visibility.Hidden;

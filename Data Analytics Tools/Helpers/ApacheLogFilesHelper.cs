@@ -45,10 +45,21 @@ namespace Data_Analytics_Tools.Helpers
 
             schemas = new Dictionary<string, List<Dictionary<string, string>>>();
 
-            SetApacheLogsDirectory(@"F:\Proficient\DATA\Apache Log Files");
+            var baseFolder = dataIO.GetBaseFolder();
+            SetApacheLogsDirectory(baseFolder);
             //SetApacheLogsDirectory(@"F:\Proficient\DATA\Apache Log Files (VDC_DT)");
             databaseName = "Q1_2023";
             //databaseName = "Q1_2023_VDC_DT_TEST";
+        }
+
+        public void SetApacheLogsDirectory(string directory)
+        {
+            apacheLogsDirectory = directory;
+            apacheLogsDirectory_LogHashes = apacheLogsDirectory + @"\Log hashes\";
+            apacheLogsDirectory_Downloads = apacheLogsDirectory + @"\Downloads\";
+
+            Directory.CreateDirectory(apacheLogsDirectory_LogHashes);
+            Directory.CreateDirectory(apacheLogsDirectory_Downloads);
         }
 
         #region Tables Schema
@@ -219,20 +230,28 @@ namespace Data_Analytics_Tools.Helpers
             }
         }
 
-        public void SetApacheLogsDirectory(string directory)
-        {
-            apacheLogsDirectory = directory;
-            apacheLogsDirectory_LogHashes = apacheLogsDirectory + @"\Log hashes\";
-            apacheLogsDirectory_Downloads = apacheLogsDirectory + @"\Downloads\";
-        }
         #endregion
 
         #region Downloading Apache Logs
-        public async void CreateLogFileListForDownload(DateTime startDate, DateTime endDate)
+        void CreateFile(string filePath)
+        {
+            if (!System.IO.File.Exists(filePath))
+            {
+                var myFile = System.IO.File.Create(filePath);
+                myFile.Close();
+            }
+        }
+        public async Task CreateLogFileListForDownload(DateTime startDate, DateTime endDate)
         {
             string logHashesListFile = apacheLogsDirectory_LogHashes + "log_hash_keys.txt";
             string hashListFileForDownloadDir = apacheLogsDirectory_LogHashes + "log_fileList_for_download.txt";
 
+            Directory.CreateDirectory(apacheLogsDirectory_LogHashes);
+            Directory.CreateDirectory(apacheLogsDirectory_Downloads);
+
+            CreateFile(logHashesListFile);
+            CreateFile(hashListFileForDownloadDir);
+            
             StreamReader hashesFile = new StreamReader(logHashesListFile);
             StreamWriter hashListFileForDownload = new StreamWriter(hashListFileForDownloadDir);
 
@@ -490,17 +509,17 @@ namespace Data_Analytics_Tools.Helpers
 
                 if (rows > 0)
                 {
-                    //await dataIO.AddOrUpdateApacheLogFileImport(filePath, fileName, true, "");
+                    await dataIO.AddOrUpdateApacheLogFileImport(filePath, fileName, true, "");
                 }
                 else
                 {
-                    //await dataIO.AddOrUpdateApacheLogFileImport(filePath, fileName, false, "");
+                    await dataIO.AddOrUpdateApacheLogFileImport(filePath, fileName, false, "");
                 }
                 return rows;
             }
             catch (Exception e)
             {
-                //await dataIO.AddOrUpdateApacheLogFileImport(filePath, fileName, false, e.Message);
+                await dataIO.AddOrUpdateApacheLogFileImport(filePath, fileName, false, e.Message);
                 errors.Add(e.Message);
             }
             return -1;
@@ -554,7 +573,7 @@ namespace Data_Analytics_Tools.Helpers
 
             var lastDate = new DateTime();
             
-            var processFiles = await dataIO.GetProcessedApacheFiles2();
+            var processFiles = await dataIO.GetProcessedApacheFiles();
             importedFilesCount = processFiles.Count;
 
             foreach (var apacheLink in allApacheLinks)
@@ -566,6 +585,8 @@ namespace Data_Analytics_Tools.Helpers
 
                 try
                 {
+                    if (apacheLink == "") continue;
+
                     var logHash = long.Parse(GetApacheFileLogHash(apacheLink));
                     var apacheLog = logHashes.FirstOrDefault(x => x.LogHash == logHash);
 
@@ -605,7 +626,9 @@ namespace Data_Analytics_Tools.Helpers
                         lastLogHash = logHash;
                         totalProcessedLogs++;
                     }
-                    
+                    //Thread.Sleep(10);
+                    //continue;
+
                     bool downloaded = DownloadApacheFileFromServer(apacheLog, apacheLink, localApacheFileDir, errorsList);
 
                     if (downloaded)

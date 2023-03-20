@@ -1,7 +1,10 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Data_Analytics_Tools.Models;
+using Microsoft.Data.SqlClient;
+using NPOI.SS.UserModel;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Data_Analytics_Tools.Helpers
 {
@@ -48,6 +51,12 @@ namespace Data_Analytics_Tools.Helpers
         {
             this.connectionString = connectionString;
             Connection = new SqlConnection(connectionString);
+        }
+
+        public void SetDatabaseName(string databaseName)
+        {
+            connectionString = $"Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database={databaseName};User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+            SetConnectionString(connectionString);  
         }
 
         public async Task CreateDatabase(string databaseName)
@@ -161,6 +170,7 @@ namespace Data_Analytics_Tools.Helpers
                 else
                 {
                     string msg = ex.Message;
+                    throw ex;
                 }
             }
 
@@ -176,6 +186,118 @@ namespace Data_Analytics_Tools.Helpers
                 }
             }
             return -1;
+        }
+
+        public async Task<int> RunQueryOLD(string query, SqlExecutionType executionType = SqlExecutionType.NonQuery)
+        {
+            int rows = 0;
+            object rowsObj = null;
+
+            try
+            {
+                command = new SqlCommand(query, Connection);
+                command.CommandTimeout = 3600;
+
+                Connection.Close();
+                Connection.Open();
+
+                if (executionType == SqlExecutionType.NonQuery)
+                {
+                    rows = command.ExecuteNonQuery();
+                }
+                else if (executionType == SqlExecutionType.Scalar)
+                {
+                    rowsObj = command.ExecuteScalar();
+                }
+                Connection.Close();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            if (executionType == SqlExecutionType.NonQuery)
+            {
+                return rows;
+            }
+            else if (executionType == SqlExecutionType.Scalar)
+            {
+                if (rowsObj != null && rowsObj is int)
+                {
+                    return (int)rowsObj;
+                }
+            }
+            return -1;
+        }
+
+        public async Task<List<ProcessedApacheFile>> GetProcessedApacheFiles(string query)
+        {
+            try
+            {
+                command = new SqlCommand(query, Connection);
+                command.CommandTimeout = 3600;
+
+                Connection.Close();
+                Connection.Open();
+
+                command.CommandText = query;
+
+                var reader = command.ExecuteReader();
+
+                var processed = new List<ProcessedApacheFile>();
+
+                while (reader.Read())
+                {
+                    var log = new ProcessedApacheFile
+                    {
+                        Id = (int)reader[0],
+                        Filename = reader.GetString(1),
+                        ImportComplete = (bool)reader[2],
+                        ProcessError = reader.GetString(3),
+                        FilePath = reader.GetString(4),
+                    };
+                    processed.Add(log);
+                }
+                return processed;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public FolderMemory GetBaseFolder(string query)
+        {
+            try
+            {
+                command = new SqlCommand(query, Connection);
+                command.CommandTimeout = 3600;
+
+                Connection.Close();
+                Connection.Open();
+
+                command.CommandText = query;
+
+                var reader = command.ExecuteReader();
+
+                var folder = new FolderMemory();
+
+                while (reader.Read())
+                {
+                    folder = new FolderMemory
+                    {
+                        Id = (int)reader[0],
+                        BaseFolderPath = reader.GetString(1),
+                        ModifyDate = (DateTime)reader[2]
+                    };
+                    break;
+                }
+                return folder;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }

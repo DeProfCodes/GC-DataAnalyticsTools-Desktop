@@ -12,8 +12,10 @@ namespace Data_Analytics_Tools.BusinessLogic
 
         public Task DeleteApacheLogFileImport(List<string> filenames);
 
-        public Task<List<string>> GetProcessedApacheFiles();
+        public Task<List<ProcessedApacheFile>> GetProcessedApacheFiles();
 
-        public Task<List<ProcessedApacheFile>> GetProcessedApacheFiles2();
+        public Task AddOrUpdateBaseFolderDirectory(string newBaseFolder);
+
+        public string GetBaseFolder();
     }
 }
