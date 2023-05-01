@@ -4,6 +4,7 @@ namespace Data_Analytics_Tools.Constants
 {
     public static class ApacheConstants
     {
+        #region SQL Tables
         public static List<string> GetApacheKnownTables()
         {
             List<string> tables = new List<string>()
@@ -62,5 +63,37 @@ namespace Data_Analytics_Tools.Constants
             return tables;
         }
 
+        public static string MemoryDatabase = "apacheLogsToMySqlMemory1";
+
+        public static string MemoryTable = "ApacheFilesImportProgress";
+
+        public static string FolderMemoryTable = "FolderMemory";
+
+        public static string CredentialsMemory = "";
+        #endregion
+
+        #region AZENQOS
+        private static string AzenqosToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZV9zaGEiOiIwY2E1MGY3ZTZjZDIyNzc4NDg2YWZlZGI4Njg4ZTE0NmFlMTM2MjkwIn0.wV-rosnwbsFZUTomNnypVr1PN4gqwDpraIY54kIbF7w";
+
+        public static void SetAzenqosToken(string token)
+        {
+            AzenqosToken = token;
+        }
+
+        public static string GetAzenqosToken()
+        {
+            return AzenqosToken;
+        }
+
+        public static string DefaultTelkomUser()
+        {
+            return "Telkom-SA";
+        }
+
+        public static string DefaultTelkomUserPwd()
+        {
+            return "@2020sa";
+        }
+        #endregion
     }
 }

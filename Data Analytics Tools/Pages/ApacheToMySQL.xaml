@@ -5,7 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:Data_Analytics_Tools.Pages"
       mc:Ignorable="d" 
-      d:DesignHeight="400" 
+      d:DesignHeight="490" 
       d:DesignWidth="800"
       Background="white"
       xmlns:sys="clr-namespace:System;assembly=mscorlib" 
@@ -15,6 +15,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
@@ -97,7 +98,7 @@
                         HorizontalAlignment="Center"
                         Margin="0,0,0,0"
                         FontWeight="Bold"/>
-                    
+
                     <TextBlock 
                         Name="tableProcessedCount"
                         HorizontalAlignment="Center"
@@ -116,7 +117,7 @@
                         Margin="2,0,0,0"
                         FontSize="12"/>
                 </StackPanel>
-                
+
 
                 <StackPanel
                     Orientation="Horizontal"
@@ -196,7 +197,7 @@
                         FontWeight="Bold"
                         Margin="10,0,0,0"
                         FontSize="12"/>
-                    
+
                 </StackPanel>
 
 
@@ -228,7 +229,7 @@
                         TextWrapping="WrapWithOverflow"
                         FontWeight="Bold"
                         FontSize="12"/>
-                    
+
                     <TextBlock 
                         Name="LogHashNumberTotal"
                         HorizontalAlignment="Center"
@@ -281,8 +282,337 @@
             </StackPanel>
         </Border>
 
-        <TextBlock
+        <Border
+            Name="configureCredentials"
+            Grid.Row="2"
+            Grid.RowSpan="5"
+            Grid.Column="1"
+            Grid.ColumnSpan="3"
+            CornerRadius="6" 
+            BorderBrush="Gray" 
+            Background="White"
+            Panel.ZIndex="10" 
+            BorderThickness="1" 
+            DockPanel.Dock="Top"
+            Margin="-50,-50,-50,-60"
+            Visibility="Hidden">
+
+            <StackPanel
+                Orientation="Vertical"
+                Margin="0,0,0,0">
+                <TextBlock
+                    Text="Configure Azenqos Credentials"
+                    HorizontalAlignment="Center"
+                    Foreground="DarkOrange"
+                    FontWeight="Bold"
+                    Margin="0,10,0,0"
+                    FontSize="14"/>
+
+                <StackPanel
+                    Orientation="Horizontal"
+                    Margin="15,10,0,0"
+                    HorizontalAlignment="Center">
+
+                    <TextBlock 
+                        Text="Username  "
+                        VerticalAlignment="Center"/>
+                    <TextBox
+                        Name="azenqosUsr"
+                        Text="Telkom-SA"
+                        Width="150"
+                        Height="Auto"
+                        VerticalAlignment="Center"
+                        Margin="10,0,0,0"
+                        Padding="5,4"/>
+
+                </StackPanel>
+                <StackPanel
+                    Orientation="Horizontal"
+                    Margin="15,10,0,0"
+                    HorizontalAlignment="Center">
+
+                    <TextBlock 
+                        Text="Password   "
+                        VerticalAlignment="Center"/>
+                    <PasswordBox
+                        Name="azenqosPwd"
+                        Width="150"
+                        Height="Auto"
+                        Password="@2020sa"
+                        VerticalAlignment="Center"
+                        Margin="10,0,0,0"
+                        Padding="5,4"/>
+
+                </StackPanel>
+                <TextBlock 
+                    x:Name="azenqosStatus"
+                    Text="Successfully connected to Azenqos server using above credentials"
+                    HorizontalAlignment="Center"
+                    Margin="0,5,0,0"
+                    FontSize="10"
+                    Foreground="Green"
+                    Visibility="Hidden"
+                    FontStyle="Italic"/>
+
+                <StackPanel 
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+                    <Button 
+                        x:Name="connectAzenqos"
+                        Content="Check Azenqos Connection" 
+                        Height="Auto"
+                        Padding="4"
+                        Margin="70,10,0,0"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Width="170" 
+                        Background="Orange"
+                        Foreground="White" 
+                        Click="ConnectAzenqos_Click">
+                        <Button.Resources>
+                            <Style TargetType="{x:Type Border}">
+                                <Setter Property="CornerRadius" Value="5"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <fa:ImageAwesome
+                        x:Name="azenqosProgress"
+                        Icon="CircleOutlineNotch" 
+                        Spin="True" 
+                        Foreground="DarkOrange"
+                        SpinDuration="2" 
+                        Height="30"
+                        Width="30"
+                        Visibility="Hidden"
+                        Margin="20,10,0,0"/>
+                </StackPanel>
+
+                <TextBlock
+                    Text="Configure SQL Credentials"
+                    HorizontalAlignment="Center"
+                    Foreground="DarkOrange"
+                    FontWeight="Bold"
+                    Margin="0,15,0,0"
+                    FontSize="14"/>
+
+                <StackPanel
+                    Orientation="Horizontal"
+                    Margin="15,12,0,0"
+                    HorizontalAlignment="Center">
+
+                    <TextBlock 
+                        Text="Server                "
+                        VerticalAlignment="Center"/>
+                    <TextBox
+                        Name="sqlServerTxt"
+                        Text="SYNERGY-7U24F9O\GCWENSASERVER"
+                        Width="150"
+                        Height="Auto"
+                        VerticalAlignment="Center"
+                        Margin="10,0,0,0"
+                        Padding="5,4"/>
+                </StackPanel>
+
+                <StackPanel
+                    Orientation="Horizontal"
+                    Margin="15,12,0,0"
+                    HorizontalAlignment="Center">
+
+                    <TextBlock 
+                        Text="Database Name "
+                        VerticalAlignment="Center"/>
+                    <TextBox
+                        Name="dbNameTxt"
+                        Text="Q1_2023"
+                        Width="150"
+                        Height="Auto"
+                        VerticalAlignment="Center"
+                        Margin="10,0,0,0"
+                        Padding="5,4"/>
+                </StackPanel>
+
+                <StackPanel
+                    Orientation="Horizontal"
+                    Margin="15,10,0,0"
+                    HorizontalAlignment="Center">
+
+                    <TextBlock 
+                        Text="SQL Username   "
+                        VerticalAlignment="Center"/>
+                    <TextBox
+                        Name="sqlUsr"
+                        Text="GcwensaUser"
+                        Width="150"
+                        Height="Auto"
+                        VerticalAlignment="Center"
+                        Margin="10,0,0,0"
+                        Padding="5,4"/>
+
+                </StackPanel>
+                <StackPanel
+                    Orientation="Horizontal"
+                    Margin="15,10,0,0"
+                    HorizontalAlignment="Center">
+
+                    <TextBlock 
+                        Text="SQL Password    "
+                        VerticalAlignment="Center"/>
+                    <PasswordBox
+                        Name="sqlPwd"
+                        Width="150"
+                        Height="Auto"
+                        Password="Gcwensa1"
+                        VerticalAlignment="Center"
+                        Margin="10,0,0,0"
+                        Padding="5,4"/>
+
+                </StackPanel>
+                <TextBlock 
+                    x:Name="sqlStatus"
+                    Text="Successfully connected to SQL server using above credentials"
+                    HorizontalAlignment="Center"
+                    Margin="0,5,0,0"
+                    FontSize="10"
+                    Foreground="Green"
+                    Visibility="Hidden"
+                    FontStyle="Italic"/>
+                <StackPanel 
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+                    <Button 
+                        x:Name="connectSQL"
+                        Content="Check SQL Connection" 
+                        Height="Auto"
+                        Padding="4"
+                        Margin="70,10,0,0"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Width="170" 
+                        Background="Orange"
+                        Foreground="White" 
+                        Click="ConnectSQL_Click">
+                        <Button.Resources>
+                            <Style TargetType="{x:Type Border}">
+                                <Setter Property="CornerRadius" Value="5"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <fa:ImageAwesome
+                        x:Name="sqlProgress"
+                        Icon="CircleOutlineNotch" 
+                        Spin="True" 
+                        Foreground="DarkOrange"
+                        SpinDuration="2" 
+                        Height="30"
+                        Width="30"
+                        Visibility="Hidden"
+                        Margin="20,10,0,0"/>
+                </StackPanel>
+
+                <StackPanel 
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+                    <Button 
+                        x:Name="cancelCredentials"
+                        Content="Cancel" 
+                        Height="Auto"
+                        Padding="4"
+                        Margin="0,10,0,0"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Width="70" 
+                        Background="red"
+                        Foreground="White" Click="CancelCredentials_Click">
+                        <Button.Resources>
+                            <Style TargetType="{x:Type Border}">
+                                <Setter Property="CornerRadius" Value="5"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <Button 
+                        x:Name="saveCredentials"
+                        Content="SAVE" 
+                        Height="Auto"
+                        Padding="4"
+                        Margin="15,10,0,0"
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Width="70" 
+                        Background="Blue"
+                        Foreground="White" Click="SaveCredentials_Click">
+                        <Button.Resources>
+                            <Style TargetType="{x:Type Border}">
+                                <Setter Property="CornerRadius" Value="5"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+                
+
+            </StackPanel>
+        </Border>
+
+        <StackPanel
             Grid.Row="3"
+            Grid.Column="1"
+            Grid.ColumnSpan="4"
+            Margin="15,5,0,-10"
+            Orientation="Vertical">
+
+            <StackPanel Orientation="Horizontal">
+                <TextBlock
+                    Text="Configure Azenqos Server Credentials and SQL Server"
+                    VerticalAlignment="Center"/>
+                <Button 
+                    x:Name="ConfigureCredentials"
+                    Content="Configure" 
+                    Height="Auto"
+                    Padding="5"
+                    Margin="15,0,0,0"
+                    FontSize="12"
+                    FontWeight="Bold"
+                    Width="Auto" 
+                    Background="Orange"
+                    Foreground="White" Click="ConfigureCredentials_Click">
+                    <Button.Resources>
+                        <Style TargetType="{x:Type Border}">
+                            <Setter Property="CornerRadius" Value="5"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </StackPanel>
+
+            <StackPanel
+                Orientation="Horizontal"
+                Margin="0,10,0,0">
+                <TextBlock
+                    Text="Current settings: Azenqos Server=" FontStyle="Italic"/>
+                <TextBlock
+                    x:Name="azenqosServerName"
+                    Text="n/a"
+                    FontWeight="Black"/>
+                <TextBlock
+                    Text=", SQL Server=" FontStyle="Italic"/>
+                <TextBlock
+                    x:Name="sqlServerName"
+                    Text="n/a"
+                    FontWeight="Black"/>
+            </StackPanel>
+            <StackPanel
+                Orientation="Horizontal"
+                Margin="90,4,0,0">
+                <TextBlock
+                    Text="Database=" FontStyle="Italic"/>
+                <TextBlock
+                    x:Name="dbName" 
+                    Text="n/a "
+                    FontWeight="Black"/>
+            </StackPanel>
+            <Line Stroke="Black" StrokeThickness="2" />
+        </StackPanel>
+
+        <TextBlock
+            Grid.Row="4"
             Grid.Column="1"
             Text="Choose base folder"
             VerticalAlignment="Center"
@@ -291,7 +621,7 @@
             />
 
         <StackPanel
-            Grid.Row="3"
+            Grid.Row="4"
             Grid.Column="2"
             Grid.ColumnSpan="2"
             Visibility="Visible"
@@ -326,7 +656,7 @@
 
         <TextBlock
             Name="sourceFolderFull"
-            Grid.Row="3"
+            Grid.Row="4"
             Grid.Column="1"
             Grid.ColumnSpan="4"
             Text="C:\"
@@ -338,7 +668,7 @@
             FontSize="11"/>
 
         <StackPanel
-            Grid.Row="4"
+            Grid.Row="5"
             Grid.Column="1"
             Grid.ColumnSpan="3"
             Visibility="Visible"
@@ -380,7 +710,7 @@
 
         <Button 
             x:Name="ApacheLogDownloadAndUpload"
-            Grid.Row="5"
+            Grid.Row="6"
             Grid.Column="1"
             Grid.ColumnSpan="3"
             Content="Download And Import Apache Logs" 

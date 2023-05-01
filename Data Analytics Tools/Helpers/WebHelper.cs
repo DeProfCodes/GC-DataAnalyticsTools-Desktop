@@ -36,11 +36,12 @@ namespace Data_Analytics_Tools.Helpers
 
             if (auth)
             {
+                var token = Constants.ApacheConstants.GetAzenqosToken();//api_token_telkom;
                 request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Post,
                     RequestUri = new Uri($"{requestUrl}/{apiCallEndPoint}"),
-                    Headers = { { "Authorization", $"Bearer {api_token_telkom}" } },
+                    Headers = { { "Authorization", $"Bearer {token}" } },
                     Content = new StringContent(content, Encoding.UTF8, "application/json"),
                 };
             }
@@ -53,18 +54,18 @@ namespace Data_Analytics_Tools.Helpers
             }
         }
 
-        public async Task Curl()
+        public async Task<string> GetAuthToken(string username, string password)
         {
             try
-            {//Telkom-SA
-                //var content = "{\"Username\":\"trial_admin\",\"Password\":\"314isnotpina\"}";
-                var content = "{\"Username\":\"Telkom-SA\",\"Password\":\"@2020sa\"}";
+            {
+                var content = "{\"Username\":\""+username+"\",\"Password\":\""+password+"\"}";
                 var token = await GetJsonAPIResponse("login", content);
-                bool done = true;
+
+                return token;
             }
             catch (Exception e)
             {
-                int h = 0;
+                throw e;
             }
         }
 

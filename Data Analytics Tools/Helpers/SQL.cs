@@ -1,9 +1,12 @@
-﻿using Data_Analytics_Tools.Models;
+﻿using Data_Analytics_Tools.Constants;
+using Data_Analytics_Tools.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Storage;
 using NPOI.SS.UserModel;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Data_Analytics_Tools.Helpers
@@ -297,6 +300,114 @@ namespace Data_Analytics_Tools.Helpers
             catch (Exception ex)
             {
                 throw ex;
+            }
+        }
+
+        public async Task<SqlConnectionStatus> CheckSQLConnection(string server, string database, string username, string password)
+        {
+            connectionString = $"Server={server};Database={database};User Id={username};Password={password};Integrated Security=false;Encrypt=False;";
+            Connection = new SqlConnection(connectionString);
+
+            try
+            {
+                Connection.Close();
+                await Connection.OpenAsync();
+
+                return SqlConnectionStatus.SUCCESS;             
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("The server was not found or was not accessible"))
+                    return SqlConnectionStatus.INCORRECT_SERVER_NAME;
+
+                if (ex.Message.Contains("Login failed for user") && !ex.Message.Contains("Cannot open database"))
+                    return SqlConnectionStatus.INCORRECT_CREDENTIALS;
+
+                if (ex.Message.Contains("Cannot open database"))
+                    return SqlConnectionStatus.DATABASE_NOT_FOUND;
+
+                return SqlConnectionStatus.OTHER;
+            }
+        }
+
+        public AppCredentials GetSavedCredentials()
+        {
+            try
+            {
+                string query = "SELECT * FROM AppCredentials";
+                command = new SqlCommand(query, Connection);
+                command.CommandTimeout = 3600;
+
+                Connection.Close();
+                Connection.Open();
+
+                command.CommandText = query;
+
+                var reader = command.ExecuteReader();
+
+                var credentials = new AppCredentials();
+
+                while (reader.Read())
+                {
+                    credentials = new AppCredentials
+                    {
+                        AzenqosUsername = reader.GetString(0),
+                        AzenqosPassword = reader.GetString(1),
+                        SqlUsername = reader.GetString(2),
+                        SqlPassword = reader.GetString(3),
+                        SqlDatabase = reader.GetString(4),
+                        SqlServer = reader.GetString(5)
+                    };
+                    break;
+                }
+                return credentials;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public async Task UpdateSavedCredentials(AppCredentials creds)
+        {
+            string query = $"UPDATE AppCredentials SET AzenqosUsername='{creds.AzenqosUsername}', AzenqosPassword='{creds.AzenqosPassword}', " +
+                           $"SqlUsername='{creds.SqlUsername}', SqlPassword='{creds.SqlPassword}', SqlDatabase='{creds.SqlDatabase}', SqlServer='{creds.SqlServer}'";
+
+            connectionString = $"Server={creds.SqlServer};Database={ApacheConstants.MemoryDatabase};User Id={creds.SqlUsername};Password={creds.SqlPassword};Integrated Security=false;Encrypt=False;";
+            SetConnectionString(connectionString);
+
+            try
+            {
+                await RunQueryOLD(query);
+            }
+            catch (Exception e)
+            {
+                var checkDb = await CheckSQLConnection(creds.SqlServer, ApacheConstants.MemoryDatabase, credentials.SqlUsername, creds.SqlPassword);
+                if (checkDb == SqlConnectionStatus.DATABASE_NOT_FOUND)
+                {
+                    connectionString = $"Server={creds.SqlServer};User Id={creds.SqlUsername};Password={creds.SqlPassword};Integrated Security=false;Encrypt=False;";
+                    SetConnectionString(connectionString);
+
+                    await RunQueryOLD($"CREATE DATABASE {ApacheConstants.MemoryDatabase}");
+
+                    connectionString = $"Server={creds.SqlServer};Database={ApacheConstants.MemoryDatabase};User Id={creds.SqlUsername};Password={creds.SqlPassword};Integrated Security=false;Encrypt=False;";
+                    SetConnectionString(connectionString);
+
+                    var createTables = $"CREATE TABLE \"{ApacheConstants.MemoryTable}\"(" +
+                                        $"Id INT, Filename TEXT, ImportComplete BIT, ProcessError TEXT, FilePath TEXT, CreateDate DATETIME);" +
+                                       $"CREATE TABLE \"{ApacheConstants.FolderMemoryTable}\"(" +
+                                        $"Id INT, BaseFolderPath TEXT, ModifyDate DATETIME);" +
+                                       $"CREATE TABLE \"{ApacheConstants.CredentialsMemory}\"(" +
+                                        $"AzenqosUsername TEXT, AzenqosPassword TEXT, SqlUsername TEXT, SqlPassword TEXT, SqlDatabase TEXT, SqlServer TEXT);";
+
+                    await RunQueryOLD(createTables);
+
+                    query = $"INSERT INTO \"{ApacheConstants.CredentialsMemory}\" VALUES('{creds.AzenqosUsername}','{creds.AzenqosPassword}','{creds.SqlUsername}','{creds.SqlPassword}','{creds.SqlDatabase}','{creds.SqlServer}');";
+                    await RunQueryOLD(query);
+
+                    if (!e.Message.Contains("Cannot open database"))
+                        throw e;
+                }
             }
         }
     }

@@ -1,5 +1,7 @@
 ﻿using Data_Analytics_Tools.BusinessLogic;
 using Data_Analytics_Tools.Helpers;
+using Data_Analytics_Tools.Models;
+using FontAwesome.WPF;
 using Microsoft.Win32;
 using NPOI.SS.Formula.Functions;
 using System;
@@ -30,6 +32,13 @@ namespace Data_Analytics_Tools.Pages
     public partial class ApacheToMySQL : Page
     {
         private ApacheLogFilesHelper apacheHelper;
+        private WebHelper azenqosServer;
+        private SQL sql;
+        private AppCredentials credentials;
+
+        private AppCredentials tempCreds;
+
+
         private BackgroundWorker worker;
         private IBusinessLogicData dataIO;
 
@@ -44,6 +53,9 @@ namespace Data_Analytics_Tools.Pages
             InitializeComponent();
 
             dataIO = new BusinessLogicData();
+            azenqosServer = new WebHelper();
+            sql = new SQL();
+            tempCreds = new AppCredentials();
 
             worker = new BackgroundWorker();
             worker.WorkerSupportsCancellation = true;
@@ -57,6 +69,37 @@ namespace Data_Analytics_Tools.Pages
             var baseFolder = dataIO.GetBaseFolder(); 
             sourceFolder.Text = baseFolder;
             sourceFolderFull.Text = baseFolder;
+
+            OpenSavedCredentials();
+        }
+
+        private void OpenSavedCredentials()
+        {
+            try
+            {
+                credentials = sql.GetSavedCredentials();
+                if (string.IsNullOrEmpty(credentials.AzenqosUsername))
+                {
+                    MessageBox.Show("Please configure credentials before", "Error Loading Credentials", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else 
+                {
+                    azenqosServerName.Text = credentials.AzenqosUsername;
+                    sqlServerName.Text = credentials.SqlServer;
+                    dbName.Text = credentials.SqlDatabase;
+
+                    azenqosUsr.Text = credentials.AzenqosUsername;
+                    azenqosPwd.Password = credentials.AzenqosPassword;
+                    sqlUsr.Text = credentials.SqlUsername;
+                    sqlPwd.Password = credentials.SqlPassword;
+                    dbNameTxt.Text = credentials.SqlDatabase;
+                    sqlServerName.Text = credentials.SqlServer;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Something went wrong", "Error Loading Credentials", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void OpenDialog(TextBox textBox, TextBlock textBlock)
@@ -221,6 +264,207 @@ namespace Data_Analytics_Tools.Pages
         {
             apacheHelper.isRunning = false;
             apacheHelper.TerminationMessage = "Operation Cancelled!";
+        }
+
+        private void ConfigureCredentials_Click(object sender, RoutedEventArgs e)
+        {
+            configureCredentials.Visibility = Visibility.Visible;
+        }
+
+        private bool AllCredentialsChecked()
+        {
+            bool azenqos = !string.IsNullOrEmpty(tempCreds.AzenqosUsername) && !string.IsNullOrEmpty(tempCreds.AzenqosPassword);
+            bool sqlCreds = !string.IsNullOrEmpty(tempCreds.SqlServer) && !string.IsNullOrEmpty(tempCreds.SqlDatabase) &&
+                            !string.IsNullOrEmpty(tempCreds.SqlUsername) && !string.IsNullOrEmpty(tempCreds.SqlPassword);
+
+            return azenqos && sqlCreds;
+        }
+
+        private async void ConnectAzenqos_Click(object sender, RoutedEventArgs e)
+        {
+            azenqosProgress.Visibility = Visibility.Visible;
+            azenqosProgress.Icon = FontAwesomeIcon.CircleOutlineNotch;
+            azenqosProgress.Foreground = Brushes.DarkOrange;
+            azenqosProgress.Spin = true;
+
+            string status = "Failed to connected to Azenqos server using above credentials";
+            Brush statusColor = Brushes.Red;
+            FontAwesomeIcon progrssIcon = FontAwesomeIcon.Times;
+            var error = "";
+
+            if (string.IsNullOrEmpty(azenqosUsr.Text) || string.IsNullOrEmpty(azenqosPwd.Password))
+            {
+                error = "Username and Password cannot be empty";
+                string validationErrors = "";
+
+                if (string.IsNullOrEmpty(azenqosUsr.Text)) validationErrors = "Azenqos Username cannot be empty.\n";
+                if (string.IsNullOrEmpty(azenqosPwd.Password)) validationErrors += "Azenqos Password cannot be empty.\n";
+
+                MessageBox.Show(validationErrors, "Input Errors", MessageBoxButton.OK, MessageBoxImage.Error);
+                azenqosStatus.Foreground = statusColor;
+                azenqosStatus.Text = error;
+                azenqosStatus.Visibility = Visibility.Visible;
+
+                azenqosProgress.Icon = progrssIcon;
+                azenqosProgress.Foreground = statusColor;
+                azenqosProgress.Spin = false;
+
+                return;
+            }
+
+            try
+            {
+                var token = await azenqosServer.GetAuthToken(azenqosUsr.Text.Trim(), azenqosPwd.Password);
+
+                if (!string.IsNullOrEmpty(token))
+                {
+                    status = "Successfully connected to Azenqos server using above credentials";
+                    statusColor = Brushes.Green;
+                    progrssIcon = FontAwesomeIcon.Check;
+                    //Constants.ApacheConstants.SetAzenqosToken(token);
+
+                    tempCreds.AzenqosUsername = azenqosUsr.Text;
+                    tempCreds.AzenqosPassword = azenqosPwd.Password;
+                }
+            }
+            catch(Exception ex) 
+            {
+                var azenqosError = ErrorHandling.GetAzenqosConnectionError(ex.Message);
+                error = !string.IsNullOrEmpty(azenqosError) ? azenqosError : ex.Message; 
+            }
+            
+            azenqosProgress.Icon = progrssIcon;
+            azenqosProgress.Foreground = statusColor;
+            azenqosProgress.Spin = false;
+
+            azenqosStatus.Visibility = Visibility.Visible;
+            azenqosStatus.Text = status;
+            azenqosStatus.Foreground = statusColor;
+
+            if(!string.IsNullOrEmpty(error))
+                MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private async void ConnectSQL_Click(object sender, RoutedEventArgs e)
+        {
+            sqlProgress.Visibility = Visibility.Visible;
+            sqlProgress.Icon = FontAwesomeIcon.CircleOutlineNotch;
+            sqlProgress.Foreground = Brushes.DarkOrange;
+            sqlProgress.Spin = true;
+
+            string status = "Failed to connected to SQL server using above credentials";
+            Brush statusColor = Brushes.Red;
+            FontAwesomeIcon progrssIcon = FontAwesomeIcon.Times;
+            var error = "";
+
+            if (string.IsNullOrEmpty(sqlServerTxt.Text) || string.IsNullOrEmpty(dbNameTxt.Text) || string.IsNullOrEmpty(sqlUsr.Text) || string.IsNullOrEmpty(sqlPwd.Password))
+            {
+                error = "1 or more textboxes is empty";
+                string validationErrors = "";
+
+                if (string.IsNullOrEmpty(sqlServerTxt.Text)) validationErrors = "SQL Server Name cannot be empty.\n";
+                if (string.IsNullOrEmpty(dbNameTxt.Text)) validationErrors += "SQL Database Name cannot be empty.\n";
+                if (string.IsNullOrEmpty(sqlUsr.Text)) validationErrors += "SQL Username cannot be empty.\n";
+                if (string.IsNullOrEmpty(sqlPwd.Password)) validationErrors += "SQL Password cannot be empty.\n";
+
+                MessageBox.Show(validationErrors, "Input Errors", MessageBoxButton.OK, MessageBoxImage.Error);
+                sqlStatus.Foreground = statusColor;  
+                sqlStatus.Text = error;
+                sqlStatus.Visibility = Visibility.Visible;
+
+                sqlProgress.Icon = progrssIcon;
+                sqlProgress.Foreground = statusColor;
+                sqlProgress.Spin = false;
+
+                return;
+            }
+
+            try
+            {
+                var sqlConnStatus = await sql.CheckSQLConnection(sqlServerTxt.Text, dbNameTxt.Text, sqlUsr.Text, sqlPwd.Password);
+
+                if (sqlConnStatus == SqlConnectionStatus.SUCCESS)
+                {
+                    status = "Successfully connected to SQL server using above credentials";
+                    statusColor = Brushes.Green;
+                    progrssIcon = FontAwesomeIcon.Check;
+
+                    tempCreds.SqlServer = sqlServerTxt.Text;
+                    tempCreds.SqlUsername = sqlUsr.Text;
+                    tempCreds.SqlPassword = sqlPwd.Password;
+                    tempCreds.SqlDatabase = dbName.Text;
+                }
+                else if (sqlConnStatus == SqlConnectionStatus.DATABASE_NOT_FOUND)
+                {
+                    MessageBoxResult createDb = MessageBox.Show(
+                                                                $"The database '{dbNameTxt.Text}' entered does not exist, would you like to crate it?",
+                                                                "Database Not Found",
+                                                                MessageBoxButton.YesNo,
+                                                                MessageBoxImage.Question
+                                                               );
+                    if (createDb == MessageBoxResult.Yes)
+                    {
+                        string connectionString = $"Server={sqlServerTxt.Text};User Id={sqlUsr.Text};Password={sqlPwd.Password};Integrated Security=false;Encrypt=False;";
+                        string query = $"CREATE DATABASE {dbNameTxt.Text}";
+                        sql.SetConnectionString(connectionString);
+                        await sql.RunQueryOLD(query);
+
+                        MessageBox.Show($"New database with name '{dbNameTxt.Text}' has been created!");
+
+                        status = "Successfully connected to SQL server using above credentials";
+                        statusColor = Brushes.Green;
+                        progrssIcon = FontAwesomeIcon.Check;
+                    }
+                    else
+                    {
+                        error = $"The database name '{dbNameTxt.Text}' does not exist, please correct this";
+                    }
+                }
+                else if (sqlConnStatus == SqlConnectionStatus.INCORRECT_SERVER_NAME)
+                {
+                    error = $"The server name '{sqlServerTxt.Text}' is Incorrect, please correct this";
+                }
+                else if (sqlConnStatus == SqlConnectionStatus.INCORRECT_CREDENTIALS)
+                {
+                    error = $"The login details for the provided server are incorrect, please enter correct username and password";
+                }
+                else if (sqlConnStatus == SqlConnectionStatus.OTHER)
+                {
+                    error = "Something went wrong, unknown error, please contact support";
+                }
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+
+            sqlProgress.Icon = progrssIcon;
+            sqlProgress.Foreground = statusColor;
+            sqlProgress.Spin = false;
+
+            sqlStatus.Visibility = Visibility.Visible;
+            sqlStatus.Text = status;
+            sqlStatus.Foreground = statusColor;
+
+            if (!string.IsNullOrEmpty(error))
+                MessageBox.Show(error, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        private void CancelCredentials_Click(object sender, RoutedEventArgs e)
+        {
+            configureCredentials.Visibility = Visibility.Hidden;  
+        }
+
+        private async void SaveCredentials_Click(object sender, RoutedEventArgs e)
+        {
+            if (AllCredentialsChecked())
+            {
+                await sql.UpdateSavedCredentials(tempCreds);
+            }
+            else
+            {
+                MessageBox.Show("Please Check both Azenqos and SQL Credentials before clicking Save button", "Cannot Save", MessageBoxButton.OK, MessageBoxImage.Hand);
+            }
         }
     }
 }
