@@ -267,7 +267,15 @@ namespace Data_Analytics_Tools.Helpers
             string azenqosPrefix = "https://gnu0.azenqos.com/logs";
             var tables = ApacheConstants.GetApacheKnownTables().OrderBy(x=>x);
 
-            var logHashes = (await api.ListAllParquets(startDate, endDate)).OrderBy(x => x.StartDate).ToList();
+            var logHashes = new List<ApacheLogHash>();
+            try
+            {
+                logHashes = (await api.ListAllParquets(startDate, endDate)).OrderBy(x => x.StartDate).ToList();
+            }
+            catch
+            {
+                throw new Exception("Something went wrong with Azenqos Servers, please try again");
+            }
 
             hashListFileForDownload.Flush();
             foreach (var logHash in logHashes)
@@ -597,8 +605,16 @@ namespace Data_Analytics_Tools.Helpers
 
             var errorsList = new List<string>();
 
-            var logHashes = (await api.ListAllParquets(startDate, endDate)).OrderBy(x=>x.StartDate).ToList();
-
+            var logHashes = new List<ApacheLogHash>();
+            try
+            {
+                logHashes = (await api.ListAllParquets(startDate, endDate)).OrderBy(x => x.StartDate).ToList();
+            }
+            catch 
+            {
+                TerminationMessage = "Azenqos common error failure.";
+                throw new Exception("Something went wrong with Azenqos Servers, please try again");
+            }
             var totalProcessedLogs = 0;
             var lastLogHash = 0L;
 

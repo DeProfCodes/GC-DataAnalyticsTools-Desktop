@@ -403,7 +403,7 @@ namespace Data_Analytics_Tools.Helpers
                     SetConnectionString(connectionString);
 
                     var createTables = $"CREATE TABLE \"{ApacheConstants.MemoryTable}\"(" +
-                                        $"Id INT, Filename TEXT, ImportComplete BIT, ProcessError TEXT, FilePath TEXT, CreateDate DATETIME);" +
+                                        $"Id INT IDENTITY(1,1) PRIMARY KEY, Filename TEXT, ImportComplete BIT, ProcessError TEXT, FilePath TEXT, CreateDate DATETIME);" +
                                        $"CREATE TABLE \"{ApacheConstants.FolderMemoryTable}\"(" +
                                         $"Id INT, BaseFolderPath TEXT, ModifyDate DATETIME);" +
                                        $"CREATE TABLE \"{ApacheConstants.CredentialsMemory}\"(" +

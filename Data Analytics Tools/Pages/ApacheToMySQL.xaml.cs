@@ -192,9 +192,23 @@ namespace Data_Analytics_Tools.Pages
 
             apacheHelper = new ApacheLogFilesHelper();
             apacheHelper.SetApacheLogsDirectory(baseFolder);
-            await apacheHelper.CreateLogFileListForDownload(StartDate, EndDate);
-            
-            worker.RunWorkerAsync();
+            try
+            {
+                await apacheHelper.CreateLogFileListForDownload(StartDate, EndDate);
+                worker.RunWorkerAsync();
+            }
+            catch(Exception ex)
+            {
+                if (ex.Message == "Something went wrong with Azenqos Servers, please try again")
+                {
+                    MessageBox.Show(ex.Message, "Azenqos Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                else
+                {
+                    MessageBox.Show("Something went wrong, please try again, if the error persist please contact support", "Azenqos Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                progressBd.Visibility = Visibility.Hidden;
+            }
         }
 
         private void worker_DoWork(object? sender, DoWorkEventArgs e)
@@ -218,6 +232,10 @@ namespace Data_Analytics_Tools.Pages
                 if (ex.Message == "Connection string not set")
                 {
                     MessageBox.Show("Please ensure check your SQL connection in configure page", "SQL Error",MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                if (ex.Message == "Something went wrong with Azenqos Servers, please try again")
+                {
+                    MessageBox.Show(ex.Message, "Azenqos Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 MessageBox.Show("An unknown error has occured, please contact support");
             }
