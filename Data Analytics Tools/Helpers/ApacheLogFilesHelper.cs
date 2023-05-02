@@ -658,7 +658,7 @@ namespace Data_Analytics_Tools.Helpers
                     //continue;
 
                     bool downloaded = DownloadApacheFileFromServer(apacheLog, apacheLink, localApacheFileDir, errorsList);
-                    continue;
+                    
                     if (downloaded)
                     {
                         downloadsCount++;

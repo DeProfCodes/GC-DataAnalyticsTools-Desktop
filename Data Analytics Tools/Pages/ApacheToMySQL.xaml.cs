@@ -218,7 +218,8 @@ namespace Data_Analytics_Tools.Pages
                 if (ex.Message == "Connection string not set")
                 {
                     MessageBox.Show("Please ensure check your SQL connection in configure page", "SQL Error",MessageBoxButton.OK, MessageBoxImage.Error);
-                }    
+                }
+                MessageBox.Show("An unknown error has occured, please contact support");
             }
         }
 
@@ -492,6 +493,13 @@ namespace Data_Analytics_Tools.Pages
                         status = "Successfully connected to SQL server using above credentials";
                         statusColor = Brushes.Green;
                         progrssIcon = FontAwesomeIcon.Check;
+
+                        tempCreds.SqlServer = sqlServerTxt.Text;
+                        tempCreds.SqlUsername = sqlUsr.Text;
+                        tempCreds.SqlPassword = sqlPwd.Password;
+                        tempCreds.SqlDatabase = dbNameTxt.Text;
+
+                        ApacheConstants.SqlServer = tempCreds.SqlServer;
                     }
                     else
                     {
