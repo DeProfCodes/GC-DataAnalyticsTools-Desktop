@@ -65,7 +65,7 @@ namespace Data_Analytics_Tools.BusinessLogic
 
             if (count < 1)
             {
-                query = $"INSERT INTO {ApacheConstants.FolderMemoryTable} VALUES('{newBaseFolder}','{DateTime.Now}')";
+                query = $"INSERT INTO {ApacheConstants.FolderMemoryTable} VALUES(1,'{newBaseFolder}','{DateTime.Now}')";
             }
             else
             {
@@ -73,7 +73,11 @@ namespace Data_Analytics_Tools.BusinessLogic
                         $" SET BaseFolderPath='{newBaseFolder}', ModifyDate = '{DateTime.Now}'" +
                         $" WHERE Id = 1";
             }
-            sql.RunQueryOLD(query);  
+            try
+            {
+                sql.RunQueryOLD(query);  
+            }
+            catch{}
         }
 
         public string GetBaseFolder()

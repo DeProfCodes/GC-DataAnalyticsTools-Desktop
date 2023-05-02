@@ -553,7 +553,8 @@ namespace Data_Analytics_Tools.Pages
 
                 configureCredentials.Visibility = Visibility.Hidden;
 
-                credentials = tempCreds; 
+                credentials = tempCreds;
+                FilesIO.UpdateServerName(credentials.SqlServer);
                 //credentials.AzenqosUsername = tempCreds.AzenqosUsername;
                 //credentials.AzenqosPassword = tempCreds.AzenqosPassword;
                 //credentials.SqlUsername = tempCreds.SqlUsername;

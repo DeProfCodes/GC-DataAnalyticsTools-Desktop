@@ -9661,9 +9661,7 @@ CREATE TABLE IF NOT EXISTS """"pp_wcdma_ho"""" (
 	""""lat""""	REAL,
 	""""lon""""	REAL
 );
-COMMIT;
-
-"";";
+COMMIT;";
 			return text;
 
         }

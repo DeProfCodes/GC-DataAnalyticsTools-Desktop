@@ -211,10 +211,11 @@ namespace Data_Analytics_Tools.Helpers
 
         public async void CreateTablesSchema(bool schemaOnly = false)
         {
-            await sql.CreateDatabase(databaseName);
+            //await sql.CreateDatabase(databaseName);
 
-            var schemaDir = apacheLogsDirectory_Schema + "\\Schema.txt";
-
+            var schemaDir = "..\\..\\..\\DATA\\Schema.txt"; //apacheLogsDirectory_Schema + "\\Schema.txt";
+            schemaDir = "Schema.txt";
+            
             StreamReader file = new StreamReader(schemaDir);
             var createTablesQueries = new List<string>();
 
