@@ -12,6 +12,7 @@ using Data_Analytics_Tools.Constants;
 using Data_Analytics_Tools.Models.APIResponse;
 using NPOI.HPSF;
 using NPOI.POIFS.Properties;
+using NPOI.SS.Formula.Functions;
 using static System.Net.WebRequestMethods;
 
 namespace Data_Analytics_Tools.Helpers
@@ -57,7 +58,7 @@ namespace Data_Analytics_Tools.Helpers
         {
             apacheLogsDirectory = directory;
             apacheLogsDirectory_LogHashes = apacheLogsDirectory + @"\Log hashes\";
-            apacheLogsDirectory_Downloads = apacheLogsDirectory + @"\Downloads\";
+            apacheLogsDirectory_Downloads = apacheLogsDirectory + @"\Downloads";
             apacheLogsDirectory_Schema = apacheLogsDirectory + @"\Schema\";
             apacheLogsDirectory_server = apacheLogsDirectory + @"\Other\";
 
@@ -215,13 +216,14 @@ namespace Data_Analytics_Tools.Helpers
 
             var schemaDir = "..\\..\\..\\DATA\\Schema.txt"; //apacheLogsDirectory_Schema + "\\Schema.txt";
             schemaDir = "Schema.txt";
-            
+
             StreamReader file = new StreamReader(schemaDir);
             var createTablesQueries = new List<string>();
 
-            string line = file.ReadLine();
             try
             {
+                
+                string line = file.ReadLine();
                 var createTables = ExtractTables(file, createTablesQueries, ref line);
 
                 if (!schemaOnly)
@@ -581,6 +583,9 @@ namespace Data_Analytics_Tools.Helpers
 
         public async void DownloadAndImportApacheFilesToMySQL(DateTime startDate, DateTime endDate, BackgroundWorker worker)
         {
+            ApacheConstants.ConnectionString += ";Trusted_Connection=True;Encrypt=False;";
+            sql.SetConnectionString(ApacheConstants.ConnectionString);
+
             string logfileList = apacheLogsDirectory_LogHashes + "log_fileList_for_download.txt";
             StreamReader file = new StreamReader(logfileList);
 
