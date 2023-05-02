@@ -1,4 +1,5 @@
-﻿using Data_Analytics_Tools.Data;
+﻿using Data_Analytics_Tools.Constants;
+using Data_Analytics_Tools.Data;
 using Data_Analytics_Tools.Helpers;
 using Data_Analytics_Tools.Models;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +16,7 @@ namespace Data_Analytics_Tools.BusinessLogic
         public BusinessLogicData()
         {
             sql = new SQL();
-            sql.SetDatabaseName("apacheLogsToMySqlMemory");
+            sql.SetDatabaseName(ApacheConstants.MemoryDatabase);
         }
 
         public async Task AddOrUpdateApacheLogFileImport(string filePath, string filename, bool importComplete, string error)
@@ -26,15 +27,15 @@ namespace Data_Analytics_Tools.BusinessLogic
 
             if (existing == null)
             {
-                query = $"INSERT INTO ApacheFilesImportProgress Values('{filename}',{(importComplete?1:0)},'{error}','{filePath}','{DateTime.Now}')";
+                query = $"INSERT INTO {ApacheConstants.MemoryTable} Values('{filename}',{(importComplete?1:0)},'{error}','{filePath}','{DateTime.Now}')";
             }
             else
             {
-                query = $"UPDATE ApacheFilesImportProgress" +
+                query = $"UPDATE {ApacheConstants.MemoryTable}" +
                         $" SET ImportComplete = {(importComplete?1:0)}, ProcessError = '{error}'" +
                         $" WHERE Id = {existing.Id}";
             }
-            await sql.RunQueryOLD(query);    
+            sql.RunQueryOLD(query);    
         }
 
         public async Task DeleteApacheLogFileImport(string filePath)
@@ -49,35 +50,42 @@ namespace Data_Analytics_Tools.BusinessLogic
 
         public async Task<List<ProcessedApacheFile>> GetProcessedApacheFiles()
         {
-            var query = "SELECT * FROM ApacheFilesImportProgress";
+            var query = $"SELECT * FROM {ApacheConstants.MemoryTable}";
             var logs = await sql.GetProcessedApacheFiles(query);
             
             return logs;
         }
 
-        public async Task AddOrUpdateBaseFolderDirectory(string newBaseFolder)
+        public void AddOrUpdateBaseFolderDirectory(string newBaseFolder)
         {
-            var query = "SELECT COUNT(*) FROM FolderMemory";
-            var count = await sql.RunQueryOLD(query, SQL.SqlExecutionType.Scalar);
+            sql.SetDatabaseName(ApacheConstants.MemoryDatabase);
+
+            var query = $"SELECT COUNT(*) FROM {ApacheConstants.FolderMemoryTable}";
+            var count = sql.RunQueryOLD(query, SQL.SqlExecutionType.Scalar);
 
             if (count < 1)
             {
-                query = $"INSERT INTO FolderMemory VALUES('{newBaseFolder}','{DateTime.Now}')";
+                query = $"INSERT INTO {ApacheConstants.FolderMemoryTable} VALUES('{newBaseFolder}','{DateTime.Now}')";
             }
             else
             {
-                query = $"UPDATE FolderMemory" +
+                query = $"UPDATE {ApacheConstants.FolderMemoryTable}" +
                         $" SET BaseFolderPath='{newBaseFolder}', ModifyDate = '{DateTime.Now}'" +
                         $" WHERE Id = 1";
             }
-            await sql.RunQueryOLD(query);  
+            sql.RunQueryOLD(query);  
         }
 
         public string GetBaseFolder()
         {
-            var query = "SELECT * FROM FolderMemory WHERE Id = 1";
+            var query = $"SELECT * FROM {ApacheConstants.FolderMemoryTable}";
             
             var baseFolder = sql.GetBaseFolder(query);
+
+            if (baseFolder != null && baseFolder.BaseFolderPath == null)
+            {
+                AddOrUpdateBaseFolderDirectory("C:\\");
+            }
 
             return baseFolder?.BaseFolderPath ?? "C:\\";
         }

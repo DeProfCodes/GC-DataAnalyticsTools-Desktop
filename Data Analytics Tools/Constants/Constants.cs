@@ -63,17 +63,26 @@ namespace Data_Analytics_Tools.Constants
             return tables;
         }
 
-        public static string MemoryDatabase = "apacheLogsToMySqlMemory1";
+        public static string MemoryDatabase = "apacheLogsToMySqlMemory";
 
         public static string MemoryTable = "ApacheFilesImportProgress";
 
         public static string FolderMemoryTable = "FolderMemory";
 
-        public static string CredentialsMemory = "";
+        public static string CredentialsMemory = "AppCredentials";
+
+        public static string ConnectionString = "";
+
+        public static string SqlServer = "";
+
+        public static string SqlUsername = "";
+
+        public static string SqlPassword = "";
+
         #endregion
 
         #region AZENQOS
-        private static string AzenqosToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZV9zaGEiOiIwY2E1MGY3ZTZjZDIyNzc4NDg2YWZlZGI4Njg4ZTE0NmFlMTM2MjkwIn0.wV-rosnwbsFZUTomNnypVr1PN4gqwDpraIY54kIbF7w";
+        public static string AzenqosToken = "";
 
         public static void SetAzenqosToken(string token)
         {

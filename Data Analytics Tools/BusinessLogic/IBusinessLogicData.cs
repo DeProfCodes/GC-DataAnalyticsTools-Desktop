@@ -14,7 +14,7 @@ namespace Data_Analytics_Tools.BusinessLogic
 
         public Task<List<ProcessedApacheFile>> GetProcessedApacheFiles();
 
-        public Task AddOrUpdateBaseFolderDirectory(string newBaseFolder);
+        public void AddOrUpdateBaseFolderDirectory(string newBaseFolder);
 
         public string GetBaseFolder();
     }

@@ -318,7 +318,7 @@
                         VerticalAlignment="Center"/>
                     <TextBox
                         Name="azenqosUsr"
-                        Text="Telkom-SA"
+                        Text=""
                         Width="150"
                         Height="Auto"
                         VerticalAlignment="Center"
@@ -338,7 +338,7 @@
                         Name="azenqosPwd"
                         Width="150"
                         Height="Auto"
-                        Password="@2020sa"
+                        Password=""
                         VerticalAlignment="Center"
                         Margin="10,0,0,0"
                         Padding="5,4"/>
@@ -405,7 +405,7 @@
                         VerticalAlignment="Center"/>
                     <TextBox
                         Name="sqlServerTxt"
-                        Text="SYNERGY-7U24F9O\GCWENSASERVER"
+                        Text=""
                         Width="150"
                         Height="Auto"
                         VerticalAlignment="Center"
@@ -423,7 +423,7 @@
                         VerticalAlignment="Center"/>
                     <TextBox
                         Name="dbNameTxt"
-                        Text="Q1_2023"
+                        Text=""
                         Width="150"
                         Height="Auto"
                         VerticalAlignment="Center"
@@ -441,7 +441,7 @@
                         VerticalAlignment="Center"/>
                     <TextBox
                         Name="sqlUsr"
-                        Text="GcwensaUser"
+                        Text=""
                         Width="150"
                         Height="Auto"
                         VerticalAlignment="Center"
@@ -461,7 +461,7 @@
                         Name="sqlPwd"
                         Width="150"
                         Height="Auto"
-                        Password="Gcwensa1"
+                        Password=""
                         VerticalAlignment="Center"
                         Margin="10,0,0,0"
                         Padding="5,4"/>
@@ -511,6 +511,7 @@
 
                 <StackPanel 
                     Orientation="Horizontal"
+                    Margin="80,0,0,0"
                     HorizontalAlignment="Center">
                     <Button 
                         x:Name="cancelCredentials"
@@ -546,6 +547,16 @@
                             </Style>
                         </Button.Resources>
                     </Button>
+                    <fa:ImageAwesome
+                        x:Name="credsProgress"
+                        Icon="CircleOutlineNotch" 
+                        Spin="True" 
+                        Foreground="DarkOrange"
+                        SpinDuration="2" 
+                        Height="30"
+                        Width="30"
+                        Visibility="Hidden"
+                        Margin="20,10,0,0"/>
                 </StackPanel>
                 
 
@@ -600,7 +611,7 @@
             </StackPanel>
             <StackPanel
                 Orientation="Horizontal"
-                Margin="90,4,0,0">
+                Margin="90,3,0,0">
                 <TextBlock
                     Text="Database=" FontStyle="Italic"/>
                 <TextBlock

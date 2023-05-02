@@ -1,4 +1,5 @@
-﻿using Data_Analytics_Tools.Models.APIResponse;
+﻿using Data_Analytics_Tools.Constants;
+using Data_Analytics_Tools.Models.APIResponse;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,7 +37,7 @@ namespace Data_Analytics_Tools.Helpers
 
             if (auth)
             {
-                var token = Constants.ApacheConstants.GetAzenqosToken();//api_token_telkom;
+                var token = ApacheConstants.AzenqosToken;
                 request = new HttpRequestMessage
                 {
                     Method = HttpMethod.Post,

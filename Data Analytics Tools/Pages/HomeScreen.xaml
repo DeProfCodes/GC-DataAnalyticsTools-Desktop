@@ -68,6 +68,7 @@
             FontWeight="Bold"
             Width="Auto" 
             Background="Orange"
+            Visibility="Hidden"
             Foreground="White" Click="RunScriptsToExcel_Click">
             <Button.Resources>
                 <Style TargetType="{x:Type Border}">

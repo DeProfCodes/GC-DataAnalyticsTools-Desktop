@@ -46,7 +46,7 @@ namespace Data_Analytics_Tools.Helpers
 
         public SQL()
         {
-            connectionString = "Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database=apacheLogsToMySqlMemory;User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
+            connectionString = $"Server={ApacheConstants.SqlServer};Database={ApacheConstants.MemoryDatabase};Trusted_Connection=True;Encrypt=False;";
             Connection = new SqlConnection(connectionString);
         }
 
@@ -58,8 +58,8 @@ namespace Data_Analytics_Tools.Helpers
 
         public void SetDatabaseName(string databaseName)
         {
-            connectionString = $"Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database={databaseName};User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False;MultipleActiveResultSets=true";
-            SetConnectionString(connectionString);  
+            connectionString = $"Server={ApacheConstants.SqlServer};Database={databaseName};Trusted_Connection=True;Encrypt=False;";
+            SetConnectionString(connectionString);
         }
 
         public async Task CreateDatabase(string databaseName)
@@ -67,11 +67,15 @@ namespace Data_Analytics_Tools.Helpers
             if (testMode)
                 databaseName += "_TEST";
 
+            connectionString = ApacheConstants.ConnectionString;
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new Exception("Connection string not set");
+            }
+            Connection = new SqlConnection(connectionString);
+
             string query = $"CREATE DATABASE {databaseName}";
             await RunQuery(query);
-
-            string connectionString = $"Server=SYNERGY-7U24F9O\\GCWENSASERVER;Database={databaseName};User Id=gcwensaUser;Password=Gcwensa123;Trusted_Connection=True;Encrypt=False";
-            Connection = new SqlConnection(connectionString);
 
             tempData.databaseName = databaseName;
         }
@@ -122,21 +126,21 @@ namespace Data_Analytics_Tools.Helpers
             string time = values2[1];
 
             string count = $"SELECT COUNT(*) FROM {tableName} WHERE log_hash = {log_hash} AND time={time}";
-            int rows = await RunQuery(count, "",SqlExecutionType.Scalar);
+            int rows = await RunQuery(count, "", SqlExecutionType.Scalar);
 
             return rows > 0;
         }
 
-        public async Task<int> RunQuery(string query, string tableName="", SqlExecutionType executionType = SqlExecutionType.NonQuery)
+        public async Task<int> RunQuery(string query, string tableName = "", SqlExecutionType executionType = SqlExecutionType.NonQuery)
         {
             int rows = 0;
             object rowsObj = null;
-            
+
             try
             {
                 command = new SqlCommand(query, Connection);
                 command.CommandTimeout = 3600;
-                
+
                 Connection.Close();
                 Connection.Open();
 
@@ -191,7 +195,7 @@ namespace Data_Analytics_Tools.Helpers
             return -1;
         }
 
-        public async Task<int> RunQueryOLD(string query, SqlExecutionType executionType = SqlExecutionType.NonQuery)
+        public int RunQueryOLD(string query, SqlExecutionType executionType = SqlExecutionType.NonQuery)
         {
             int rows = 0;
             object rowsObj = null;
@@ -313,7 +317,7 @@ namespace Data_Analytics_Tools.Helpers
                 Connection.Close();
                 await Connection.OpenAsync();
 
-                return SqlConnectionStatus.SUCCESS;             
+                return SqlConnectionStatus.SUCCESS;
             }
             catch (Exception ex)
             {
@@ -378,19 +382,24 @@ namespace Data_Analytics_Tools.Helpers
 
             try
             {
-                await RunQueryOLD(query);
+                var count = RunQueryOLD($"SELECT COUNT(*) FROM {ApacheConstants.CredentialsMemory}", SqlExecutionType.Scalar);
+                if (count < 1)
+                {
+                    query = $"INSERT INTO \"{ApacheConstants.CredentialsMemory}\" VALUES('{creds.AzenqosUsername}','{creds.AzenqosPassword}','{creds.SqlUsername}','{creds.SqlPassword}','{creds.SqlDatabase}','{creds.SqlServer}');";
+                }
+                RunQueryOLD(query);
             }
             catch (Exception e)
             {
-                var checkDb = await CheckSQLConnection(creds.SqlServer, ApacheConstants.MemoryDatabase, credentials.SqlUsername, creds.SqlPassword);
+                var checkDb = await CheckSQLConnection(creds.SqlServer, ApacheConstants.MemoryDatabase, creds.SqlUsername, creds.SqlPassword);
                 if (checkDb == SqlConnectionStatus.DATABASE_NOT_FOUND)
                 {
                     connectionString = $"Server={creds.SqlServer};User Id={creds.SqlUsername};Password={creds.SqlPassword};Integrated Security=false;Encrypt=False;";
                     SetConnectionString(connectionString);
 
-                    await RunQueryOLD($"CREATE DATABASE {ApacheConstants.MemoryDatabase}");
+                    RunQueryOLD($"CREATE DATABASE {ApacheConstants.MemoryDatabase}");
 
-                    connectionString = $"Server={creds.SqlServer};Database={ApacheConstants.MemoryDatabase};User Id={creds.SqlUsername};Password={creds.SqlPassword};Integrated Security=false;Encrypt=False;";
+                    connectionString = $"Server={creds.SqlServer};Database={ApacheConstants.MemoryDatabase};Trusted_Connection=True;Encrypt=False";
                     SetConnectionString(connectionString);
 
                     var createTables = $"CREATE TABLE \"{ApacheConstants.MemoryTable}\"(" +
@@ -400,10 +409,10 @@ namespace Data_Analytics_Tools.Helpers
                                        $"CREATE TABLE \"{ApacheConstants.CredentialsMemory}\"(" +
                                         $"AzenqosUsername TEXT, AzenqosPassword TEXT, SqlUsername TEXT, SqlPassword TEXT, SqlDatabase TEXT, SqlServer TEXT);";
 
-                    await RunQueryOLD(createTables);
+                    RunQueryOLD(createTables);
 
                     query = $"INSERT INTO \"{ApacheConstants.CredentialsMemory}\" VALUES('{creds.AzenqosUsername}','{creds.AzenqosPassword}','{creds.SqlUsername}','{creds.SqlPassword}','{creds.SqlDatabase}','{creds.SqlServer}');";
-                    await RunQueryOLD(query);
+                    RunQueryOLD(query);
 
                     if (!e.Message.Contains("Cannot open database"))
                         throw e;

@@ -28,6 +28,8 @@ namespace Data_Analytics_Tools.Helpers
         private string apacheLogsDirectory;
         private string apacheLogsDirectory_LogHashes;
         private string apacheLogsDirectory_Downloads;
+        private string apacheLogsDirectory_Schema;
+        private string apacheLogsDirectory_server;
 
         private string databaseName = "";
 
@@ -45,11 +47,10 @@ namespace Data_Analytics_Tools.Helpers
 
             schemas = new Dictionary<string, List<Dictionary<string, string>>>();
 
+            sql.SetConnectionString(ApacheConstants.ConnectionString);
+
             var baseFolder = dataIO.GetBaseFolder();
             SetApacheLogsDirectory(baseFolder);
-            //SetApacheLogsDirectory(@"F:\Proficient\DATA\Apache Log Files (VDC_DT)");
-            databaseName = "Q1_2023";
-            //databaseName = "Q1_2023_VDC_DT_TEST";
         }
 
         public void SetApacheLogsDirectory(string directory)
@@ -57,9 +58,13 @@ namespace Data_Analytics_Tools.Helpers
             apacheLogsDirectory = directory;
             apacheLogsDirectory_LogHashes = apacheLogsDirectory + @"\Log hashes\";
             apacheLogsDirectory_Downloads = apacheLogsDirectory + @"\Downloads\";
+            apacheLogsDirectory_Schema = apacheLogsDirectory + @"\Schema\";
+            apacheLogsDirectory_server = apacheLogsDirectory + @"\Other\";
 
             Directory.CreateDirectory(apacheLogsDirectory_LogHashes);
             Directory.CreateDirectory(apacheLogsDirectory_Downloads);
+            Directory.CreateDirectory(apacheLogsDirectory_Schema);
+            Directory.CreateDirectory(apacheLogsDirectory_server);
         }
 
         #region Tables Schema
@@ -208,7 +213,7 @@ namespace Data_Analytics_Tools.Helpers
         {
             await sql.CreateDatabase(databaseName);
 
-            var schemaDir = "..\\..\\..\\DATA\\Schema.txt";
+            var schemaDir = apacheLogsDirectory_Schema + "\\Schema.txt";
 
             StreamReader file = new StreamReader(schemaDir);
             var createTablesQueries = new List<string>();
@@ -241,6 +246,7 @@ namespace Data_Analytics_Tools.Helpers
                 myFile.Close();
             }
         }
+
         public async Task CreateLogFileListForDownload(DateTime startDate, DateTime endDate)
         {
             string logHashesListFile = apacheLogsDirectory_LogHashes + "log_hash_keys.txt";
@@ -272,6 +278,27 @@ namespace Data_Analytics_Tools.Helpers
 
             hashesFile.Close();
             hashListFileForDownload.Close();
+        }
+
+        public async Task CreateSchemaTextAndOtherTexts(string serverName)
+        {
+            string schema = apacheLogsDirectory_Schema + "Schema.txt";
+            string server = apacheLogsDirectory_server + "Server.txt";
+
+            Directory.CreateDirectory(apacheLogsDirectory_Schema);
+            Directory.CreateDirectory(apacheLogsDirectory_server);
+
+            CreateFile(schema);
+            CreateFile(server);
+
+            StreamWriter schemaFile = new StreamWriter(schema);
+            StreamWriter serverFile= new StreamWriter(server);
+
+            schemaFile.WriteLine(SchemaHelper.Schema());
+            serverFile.WriteLine(serverFile);
+
+            schemaFile.Close();
+            serverFile.Close();
         }
 
         private string GetApacheFileName(string apacheLink)
@@ -630,7 +657,7 @@ namespace Data_Analytics_Tools.Helpers
                     //continue;
 
                     bool downloaded = DownloadApacheFileFromServer(apacheLog, apacheLink, localApacheFileDir, errorsList);
-
+                    continue;
                     if (downloaded)
                     {
                         downloadsCount++;

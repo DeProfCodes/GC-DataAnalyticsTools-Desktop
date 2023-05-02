@@ -1,4 +1,5 @@
 ﻿using Data_Analytics_Tools.BusinessLogic;
+using Data_Analytics_Tools.Constants;
 using Data_Analytics_Tools.Helpers;
 using Data_Analytics_Tools.Models;
 using FontAwesome.WPF;
@@ -22,6 +23,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using static Paket.NetUtils.Auth;
 using static Paket.Profile.EventBoundary;
 
 namespace Data_Analytics_Tools.Pages
@@ -46,15 +48,15 @@ namespace Data_Analytics_Tools.Pages
         private DateTime EndDate;
 
         private int totalLogHashes;
-        private string terminationMessage;
+        private string baseFolder;
 
         public ApacheToMySQL()
         {
             InitializeComponent();
+            
 
-            dataIO = new BusinessLogicData();
             azenqosServer = new WebHelper();
-            sql = new SQL();
+            
             tempCreds = new AppCredentials();
 
             worker = new BackgroundWorker();
@@ -66,39 +68,64 @@ namespace Data_Analytics_Tools.Pages
 
             progressBd.Visibility = Visibility.Hidden;
 
-            var baseFolder = dataIO.GetBaseFolder(); 
-            sourceFolder.Text = baseFolder;
-            sourceFolderFull.Text = baseFolder;
+            FilesIO.CreateSchemaTextAndOtherTexts();
+
+            ApacheConstants.SqlServer = FilesIO.GetServerName();
+            sql = new SQL();
 
             OpenSavedCredentials();
+            SetBaseFolder();
         }
 
+        private void SetBaseFolder()
+        {
+            dataIO = new BusinessLogicData();
+
+            sourceFolder.Text = FilesIO.GetBaseFolder();
+            sourceFolderFull.Text = FilesIO.GetBaseFolder();
+            return;
+            try
+            {
+                
+
+                var baseFolder = dataIO.GetBaseFolder();
+                sourceFolder.Text = baseFolder;
+                sourceFolderFull.Text = baseFolder;
+            }
+            catch
+            {
+                sourceFolder.Text = FilesIO.GetBaseFolder();
+                sourceFolderFull.Text = FilesIO.GetBaseFolder();
+            }
+        }
         private void OpenSavedCredentials()
         {
             try
             {
-                credentials = sql.GetSavedCredentials();
+                credentials = sql.GetSavedCredentials() ?? new AppCredentials();
                 if (string.IsNullOrEmpty(credentials.AzenqosUsername))
                 {
                     MessageBox.Show("Please configure credentials before", "Error Loading Credentials", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
                 else 
                 {
-                    azenqosServerName.Text = credentials.AzenqosUsername;
-                    sqlServerName.Text = credentials.SqlServer;
-                    dbName.Text = credentials.SqlDatabase;
+                    azenqosServerName.Text = credentials?.AzenqosUsername ?? "n/a";
+                    sqlServerName.Text = credentials?.SqlServer ?? "n/a";
+                    dbName.Text = credentials?.SqlDatabase ?? "n/a";
 
-                    azenqosUsr.Text = credentials.AzenqosUsername;
-                    azenqosPwd.Password = credentials.AzenqosPassword;
-                    sqlUsr.Text = credentials.SqlUsername;
-                    sqlPwd.Password = credentials.SqlPassword;
-                    dbNameTxt.Text = credentials.SqlDatabase;
-                    sqlServerName.Text = credentials.SqlServer;
+                    azenqosUsr.Text = credentials?.AzenqosUsername ?? "";
+                    azenqosPwd.Password = credentials?.AzenqosPassword ?? "";
+                    sqlUsr.Text = credentials?.SqlUsername ?? "";
+                    sqlPwd.Password = credentials?.SqlPassword ?? "";
+                    dbNameTxt.Text = credentials?.SqlDatabase ?? "";
+                    sqlServerTxt.Text = credentials?.SqlServer ?? "";
                 }
+                ApacheConstants.SqlServer = credentials?.SqlServer ?? "";
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Something went wrong", "Error Loading Credentials", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Something went wrong, Please try setting credentials to remove unknown errors", "Error Loading Credentials", MessageBoxButton.OK, MessageBoxImage.Error);
+                configureCredentials.Visibility = Visibility.Visible;
             }
         }
 
@@ -135,13 +162,36 @@ namespace Data_Analytics_Tools.Pages
 
         private async void ApacheLogDownloadAndUpload_Click(object sender, RoutedEventArgs e)
         {
+            //force configure
+            if (string.IsNullOrEmpty(credentials.SqlUsername) || string.IsNullOrEmpty(credentials.SqlPassword) || string.IsNullOrEmpty(credentials.AzenqosUsername) ||
+                string.IsNullOrEmpty(credentials.AzenqosPassword) || string.IsNullOrEmpty(credentials.SqlServer) || string.IsNullOrEmpty(credentials.SqlDatabase))
+            {
+                MessageBox.Show("Please configure Azenqos and SQL Credentials to begin the process", "Configure Credentials", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            else
+            {
+                ApacheConstants.ConnectionString = $"Server={credentials.SqlServer};Database={credentials.SqlDatabase};User Id={credentials.SqlUsername};Password={credentials.SqlPassword};Integrated Security=false;Encrypt=False;";
+            }
+
+            if (string.IsNullOrEmpty(ApacheConstants.AzenqosToken))
+            {
+                var token = await azenqosServer.GetAuthToken(credentials.AzenqosUsername, credentials.AzenqosPassword);
+                ApacheConstants.AzenqosToken = token;
+            }
+
             DateTime.TryParse(startDate.Text, out StartDate);
             DateTime.TryParse(endDate.Text, out EndDate);
             progressBd.Visibility = Visibility.Visible;
 
-            await dataIO.AddOrUpdateBaseFolderDirectory(sourceFolderFull.Text);
+            dataIO.AddOrUpdateBaseFolderDirectory(sourceFolderFull.Text);
+            FilesIO.UpdateBaseFolder(sourceFolderFull.Text);
+            FilesIO.UpdateServerName(credentials.SqlServer);
+
+            baseFolder = sourceFolderFull.Text;
 
             apacheHelper = new ApacheLogFilesHelper();
+            apacheHelper.SetApacheLogsDirectory(baseFolder);
             await apacheHelper.CreateLogFileListForDownload(StartDate, EndDate);
             
             worker.RunWorkerAsync();
@@ -152,8 +202,8 @@ namespace Data_Analytics_Tools.Pages
             try
             {
                 apacheHelper = new ApacheLogFilesHelper();
+                apacheHelper.SetApacheLogsDirectory(baseFolder);
                 apacheHelper.CreateTablesSchema();
-               
                 apacheHelper.isRunning = true;
 
                 apacheHelper.DownloadAndImportApacheFilesToMySQL(StartDate, EndDate, worker);
@@ -165,6 +215,10 @@ namespace Data_Analytics_Tools.Pages
             catch (Exception ex)
             {
                 worker.CancelAsync();
+                if (ex.Message == "Connection string not set")
+                {
+                    MessageBox.Show("Please ensure check your SQL connection in configure page", "SQL Error",MessageBoxButton.OK, MessageBoxImage.Error);
+                }    
             }
         }
 
@@ -269,6 +323,28 @@ namespace Data_Analytics_Tools.Pages
         private void ConfigureCredentials_Click(object sender, RoutedEventArgs e)
         {
             configureCredentials.Visibility = Visibility.Visible;
+
+            azenqosProgress.Visibility = Visibility.Hidden;
+            azenqosStatus.Visibility = Visibility.Hidden;
+            sqlProgress.Visibility = Visibility.Hidden;
+            sqlStatus.Visibility = Visibility.Hidden;
+            credsProgress.Visibility = Visibility.Hidden;
+
+            try
+            {
+                credentials = sql.GetSavedCredentials();
+            }
+            catch
+            {
+                
+            }
+
+            azenqosUsr.Text = credentials?.AzenqosUsername ?? "";
+            azenqosPwd.Password = credentials?.AzenqosPassword ?? "";
+            sqlUsr.Text = credentials?.SqlUsername ?? "";
+            sqlPwd.Password = credentials?.SqlPassword ?? "";
+            dbNameTxt.Text = credentials?.SqlDatabase ?? "";
+            sqlServerName.Text = credentials?.SqlServer ?? "";
         }
 
         private bool AllCredentialsChecked()
@@ -321,7 +397,7 @@ namespace Data_Analytics_Tools.Pages
                     status = "Successfully connected to Azenqos server using above credentials";
                     statusColor = Brushes.Green;
                     progrssIcon = FontAwesomeIcon.Check;
-                    //Constants.ApacheConstants.SetAzenqosToken(token);
+                    ApacheConstants.AzenqosToken = token;
 
                     tempCreds.AzenqosUsername = azenqosUsr.Text;
                     tempCreds.AzenqosPassword = azenqosPwd.Password;
@@ -392,7 +468,9 @@ namespace Data_Analytics_Tools.Pages
                     tempCreds.SqlServer = sqlServerTxt.Text;
                     tempCreds.SqlUsername = sqlUsr.Text;
                     tempCreds.SqlPassword = sqlPwd.Password;
-                    tempCreds.SqlDatabase = dbName.Text;
+                    tempCreds.SqlDatabase = dbNameTxt.Text;
+
+                    ApacheConstants.SqlServer = tempCreds.SqlServer;
                 }
                 else if (sqlConnStatus == SqlConnectionStatus.DATABASE_NOT_FOUND)
                 {
@@ -407,7 +485,7 @@ namespace Data_Analytics_Tools.Pages
                         string connectionString = $"Server={sqlServerTxt.Text};User Id={sqlUsr.Text};Password={sqlPwd.Password};Integrated Security=false;Encrypt=False;";
                         string query = $"CREATE DATABASE {dbNameTxt.Text}";
                         sql.SetConnectionString(connectionString);
-                        await sql.RunQueryOLD(query);
+                        sql.RunQueryOLD(query);
 
                         MessageBox.Show($"New database with name '{dbNameTxt.Text}' has been created!");
 
@@ -457,9 +535,31 @@ namespace Data_Analytics_Tools.Pages
 
         private async void SaveCredentials_Click(object sender, RoutedEventArgs e)
         {
+            credsProgress.Visibility = Visibility.Visible;
             if (AllCredentialsChecked())
             {
                 await sql.UpdateSavedCredentials(tempCreds);
+                MessageBoxResult ans = MessageBox.Show("All Credentials have been saved successfully", "Credentials Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                azenqosServerName.Text = tempCreds.AzenqosUsername;
+                sqlServerName.Text = tempCreds.SqlServer;
+                dbName.Text = tempCreds.SqlDatabase;
+
+                azenqosProgress.Visibility = Visibility.Hidden;
+                azenqosStatus.Visibility = Visibility.Hidden;
+                sqlProgress.Visibility = Visibility.Hidden;
+                sqlStatus.Visibility = Visibility.Hidden;
+                credsProgress.Visibility = Visibility.Hidden;
+
+                configureCredentials.Visibility = Visibility.Hidden;
+
+                credentials = tempCreds; 
+                //credentials.AzenqosUsername = tempCreds.AzenqosUsername;
+                //credentials.AzenqosPassword = tempCreds.AzenqosPassword;
+                //credentials.SqlUsername = tempCreds.SqlUsername;
+                //credentials.SqlPassword = tempCreds.SqlPassword;
+                //credentials.SqlDatabase = tempCreds.SqlDatabase;
+                //credentials.SqlServer = tempCreds.SqlServer;
             }
             else
             {
